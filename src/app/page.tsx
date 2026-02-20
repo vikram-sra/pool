@@ -335,6 +335,8 @@ const BRANDS: Brand[] = [
 function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZen }: { type: string; color: string; index: number; currentIndex: number, onPointerDown: () => void, onToggleZen: () => void }) {
   const groupRef = useRef<any>(null);
   const time = useRef(Math.random() * 100); // offset randomness
+  // Bug 4: track whether pointer moved to prevent accidental Zen toggle on rotate
+  const pointerMoved = useRef(false);
 
   useFrame((state, delta) => {
     time.current += delta;
@@ -373,19 +375,25 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
   const glassMat = <meshPhysicalMaterial transmission={1} thickness={0.5} roughness={0.05} ior={1.5} color="#FFFFFF" />;
 
   const handlePointerDown = (e: any) => {
+    e.stopPropagation(); // Bug 2: prevent useDrag on window from competing with OrbitControls
+    pointerMoved.current = false; // Bug 4: reset move tracker
     onPointerDown();
+  };
+
+  const handlePointerMove = (e: any) => {
+    pointerMoved.current = true; // Bug 4: mark that pointer has moved (rotation happening)
   };
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    onToggleZen();
+    if (!pointerMoved.current) onToggleZen(); // Bug 4: only toggle Zen if no rotation occurred
   };
 
   const renderModel = () => {
     switch (type) {
       case "shoe":
         return (
-          <group position={[0, -0.5, 0]} onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group position={[0, -0.5, 0]} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow position={[0, 0, 0]}><capsuleGeometry args={[0.5, 1.2, 16, 32]} />{mat}</mesh>
             <mesh castShadow position={[0.4, -0.2, 0]} rotation={[0, 0, Math.PI / 4]}><cylinderGeometry args={[0.3, 0.4, 1.3, 32]} />{mat}</mesh>
             <mesh position={[0, -0.6, 0]} scale={[1.1, 0.2, 1.1]}><boxGeometry />{accentMat}</mesh>
@@ -393,7 +401,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "walkman":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[1.2, 1.8, 0.4]} />{mat}</mesh>
             <mesh position={[0, 0.2, 0.21]} scale={[0.8, 0.6, 0.02]}><boxGeometry />{glassMat}</mesh>
             <mesh position={[0.65, 0.4, 0]} scale={[0.1, 0.4, 0.2]}><boxGeometry />{accentMat}</mesh>
@@ -402,7 +410,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "camera":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[1.8, 1.1, 0.6]} />{mat}</mesh>
             <mesh castShadow position={[0, 0, 0.4]} rotation={[Math.PI / 2, 0, 0]}>
               <cylinderGeometry args={[0.45, 0.45, 0.6, 32]} />{mat}
@@ -415,7 +423,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "synth":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[2.8, 0.15, 1]} />{mat}</mesh>
             {[-1, -0.5, 0, 0.5, 1].map((x, i) => (
               <mesh key={i} position={[x, 0.15, 0]} scale={[0.3, 0.1, 0.8]}><boxGeometry />{accentMat}</mesh>
@@ -426,7 +434,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "watch":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.8, 0.8, 0.15, 64]} />{mat}</mesh>
             <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.08]}><cylinderGeometry args={[0.75, 0.75, 0.02, 64]} />{glassMat}</mesh>
             <mesh position={[0, 1.1, 0]} scale={[0.5, 0.8, 0.08]}><boxGeometry />{accentMat}</mesh>
@@ -436,7 +444,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "keyboard":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick} rotation={[-0.2, 0, 0]}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick} rotation={[-0.2, 0, 0]}>
             <mesh castShadow><boxGeometry args={[3, 0.3, 1.2]} />{mat}</mesh>
             <group position={[0, 0.2, 0]}>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -447,7 +455,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "drone":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[1, 0.4, 1]} />{mat}</mesh>
             {[[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]].map((pos, i) => (
               <group key={i} position={[pos[0], 0.1, pos[1]]}>
@@ -460,7 +468,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "espresso":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[1.5, 1.8, 1.5]} />{mat}</mesh>
             <mesh position={[0, 0.95, 0]} scale={[1.6, 0.1, 1.6]}><boxGeometry />{mat}</mesh>
             <mesh position={[0, -0.2, 0.8]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.15, 0.15, 0.8]} />{mat}</mesh>
@@ -470,7 +478,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "speaker":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><cylinderGeometry args={[0.8, 1, 2.2, 32]} />{mat}</mesh>
             <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.7, 0.7, 2, 32]} />{accentMat}</mesh>
             <mesh position={[0, 1.15, 0]}><cylinderGeometry args={[0.8, 0.8, 0.1, 32]} />{mat}</mesh>
@@ -478,7 +486,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "suitcase":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[1.2, 1.8, 0.6]} />{mat}</mesh>
             {[-0.6, -0.2, 0.2, 0.6].map((y, i) => (
               <mesh key={i} position={[0, y, 0.31]} scale={[1.1, 0.05, 0.02]}><boxGeometry />{accentMat}</mesh>
@@ -490,7 +498,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "shell":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><sphereGeometry args={[1, 32, 32]} />{mat}</mesh>
             <mesh position={[0, 0, 0]} scale={[1.1, 0.8, 1.1]}><sphereGeometry args={[1, 32, 32]} />{mat}</mesh>
             <mesh position={[0, 1.2, 0]} scale={[0.2, 0.4, 0.2]}><boxGeometry />{accentMat}</mesh>
@@ -498,7 +506,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "board":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow rotation={[0, 0, Math.PI / 2]}><capsuleGeometry args={[0.4, 2.8, 16, 32]} />{mat}</mesh>
             <mesh position={[0, -0.2, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 0.2, 1.2]}><boxGeometry />{accentMat}</mesh>
             {[-1, 1].map((x, i) => (
@@ -508,7 +516,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "console":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><boxGeometry args={[2, 0.6, 1.6]} />{mat}</mesh>
             <mesh position={[0, 0.35, -0.2]}><boxGeometry args={[1.4, 0.1, 0.8]} />{accentMat}</mesh>
             <mesh position={[-0.6, 0.35, 0.5]}><sphereGeometry args={[0.15, 16, 16]} />{accentMat}</mesh>
@@ -517,7 +525,7 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "chair":
         return (
-          <group position={[0, -0.5, 0]} onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group position={[0, -0.5, 0]} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow position={[0, 0.6, 0]}><boxGeometry args={[1.2, 0.15, 1.2]} />{mat}</mesh>
             <mesh castShadow position={[0, 1.4, -0.5]} rotation={[-0.1, 0, 0]}><boxGeometry args={[1.1, 1.3, 0.1]} />{mat}</mesh>
             <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.1, 0.1, 1.2]} />{accentMat}</mesh>
@@ -526,14 +534,14 @@ function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZ
         );
       case "earbuds":
         return (
-          <group onPointerDown={handlePointerDown} onClick={handleClick}>
+          <group onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}>
             <mesh castShadow><sphereGeometry args={[0.6, 32, 32]} />{mat}</mesh>
             <mesh position={[0, -0.4, 0]} rotation={[0, 0, 0]}><cylinderGeometry args={[0.15, 0.1, 0.8]} />{mat}</mesh>
             <mesh position={[0, 0.1, 0.5]} scale={[0.2, 0.2, 0.1]}><sphereGeometry />{accentMat}</mesh>
           </group>
         );
       default:
-        return <mesh castShadow onPointerDown={handlePointerDown} onClick={handleClick}><boxGeometry args={[1, 1, 1]} />{mat}</mesh>;
+        return <mesh castShadow onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onClick={handleClick}><boxGeometry args={[1, 1, 1]} />{mat}</mesh>;
     }
   };
 
@@ -551,6 +559,13 @@ function ThreeScene({ currentCampaign, currentIndex, onInteractionStart, onToggl
     window.addEventListener("pointerup", handlePointerUp);
     return () => window.removeEventListener("pointerup", handlePointerUp);
   }, []);
+
+  // Bug 1: Reset camera to default position when campaign changes
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.reset();
+    }
+  }, [currentIndex]);
 
   // Custom Zoom Control: Disable scroll-to-zoom, only allow pinch-to-zoom (trackpad/touch)
   useEffect(() => {
@@ -572,12 +587,21 @@ function ThreeScene({ currentCampaign, currentIndex, onInteractionStart, onToggl
       }
     };
 
+    // Bug 6: disable zoom when pinch ends so single-finger scroll is never interpreted as zoom
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (controlsRef.current && e.touches.length < 2) {
+        controlsRef.current.enableZoom = false;
+      }
+    };
+
     el.addEventListener("wheel", handleWheelCapture, { capture: true });
     el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
       el.removeEventListener("wheel", handleWheelCapture, { capture: true });
       el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchend", handleTouchEnd);
     };
   }, [gl]);
 
@@ -611,6 +635,7 @@ function ThreeScene({ currentCampaign, currentIndex, onInteractionStart, onToggl
         maxDistance={12}
         enableDamping={true}
         dampingFactor={0.15}
+        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} // Bug 5: explicit touch config for consistent cross-device behaviour
         makeDefault
       />
     </>
@@ -622,6 +647,7 @@ export default function Home() {
   const [currentTab, setCurrentTab] = useState<"FEED" | "TRENDS" | "BRANDS" | "PROFILE">("FEED");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZenMode, setIsZenMode] = useState(false);
+  const [hasInteracted3D, setHasInteracted3D] = useState(false); // UX: track first 3D interaction for rotate hint
   const isInteractingWithObject = useRef(false);
 
   const currentCampaign = CAMPAIGNS[currentIndex % CAMPAIGNS.length];
@@ -631,7 +657,11 @@ export default function Home() {
       isInteractingWithObject.current = false;
     };
     window.addEventListener("pointerup", handleUp);
-    return () => window.removeEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleUp); // Bug 3: handle browser-cancelled pointers (e.g. system gestures)
+    return () => {
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleUp);
+    };
   }, []);
 
   return (
@@ -641,11 +671,16 @@ export default function Home() {
       <div className={`absolute inset-0 bg-gradient-to-br from-[#F5F4F0] to-[#E5E3DF] transition-opacity duration-700 pointer-events-auto ${currentTab === "FEED" ? "opacity-100 z-10" : "opacity-0 -z-50 delay-500"}`}>
         <div className="absolute inset-0 top-[-10vh]">
           <Suspense fallback={null}>
-            <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }} gl={{ preserveDrawingBuffer: true }} style={{ touchAction: 'none' }}>
+            <Canvas
+              dpr={typeof navigator !== 'undefined' && ((navigator as any).deviceMemory ?? 8) <= 4 ? [1, 1.5] : [1, 2]}
+              camera={{ position: [0, 0, 5], fov: 45 }}
+              gl={{ preserveDrawingBuffer: true }}
+              style={{ touchAction: 'none' }}
+            >
               <ThreeScene
                 currentCampaign={currentCampaign}
                 currentIndex={currentIndex}
-                onInteractionStart={() => { isInteractingWithObject.current = true; }}
+                onInteractionStart={() => { isInteractingWithObject.current = true; setHasInteracted3D(true); }}
                 onToggleZen={() => setIsZenMode(prev => !prev)}
               />
             </Canvas>
@@ -664,6 +699,7 @@ export default function Home() {
             currentTab={currentTab}
             isZenMode={isZenMode}
             setIsZenMode={setIsZenMode}
+            hasInteracted3D={hasInteracted3D}
           />
         )}
         {currentTab === "TRENDS" && <TrendsView key="trends" />}
@@ -696,7 +732,7 @@ export default function Home() {
 // ==========================================
 // FEED VIEW
 // ==========================================
-function FeedView({ currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject, currentTab, isZenMode, setIsZenMode }: { currentIndex: number, setCurrentIndex: React.Dispatch<React.SetStateAction<number>>, currentCampaign: Campaign, isInteractingWithObject: React.RefObject<boolean>, currentTab: string, isZenMode: boolean, setIsZenMode: (val: boolean) => void }) {
+function FeedView({ currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject, currentTab, isZenMode, setIsZenMode, hasInteracted3D }: { currentIndex: number, setCurrentIndex: React.Dispatch<React.SetStateAction<number>>, currentCampaign: Campaign, isInteractingWithObject: React.RefObject<boolean>, currentTab: string, isZenMode: boolean, setIsZenMode: (val: boolean) => void, hasInteracted3D: boolean }) {
   const [pledgeState, setPledgeState] = useState<"initiated" | "escrowed" | "locked">("initiated");
   const [activeView, setActiveView] = useState<"none" | "specs" | "squads">("none");
   const lastScrollTime = useRef<number>(0);
@@ -809,12 +845,30 @@ function FeedView({ currentIndex, setCurrentIndex, currentCampaign, isInteractin
         </div>
       </div>
 
+      {/* UX: Rotate affordance hint — shown until first 3D interaction */}
+      <AnimatePresence>
+        {!hasInteracted3D && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ delay: 1.2, duration: 0.4 }}
+            className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none flex flex-col items-center gap-1.5"
+          >
+            <div className="flex items-center gap-2 bg-[#1C1C1C]/70 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+              <span style={{ fontSize: 14 }}>↻</span>
+              <span>Tap &amp; drag to rotate</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Swipe Surface Container (Replaced drag with pointer-events-none to allow OrbitControls) */}
       <motion.div
         className="absolute inset-0 z-10 flex flex-col justify-end pointer-events-none"
       >
-        {/* 
-          Swipe interactions are handled by useDrag on the window, 
+        {/*
+          Swipe interactions are handled by useDrag on the window,
           while model rotation is scoped only to touches on the 3D meshes.
         */}
 
