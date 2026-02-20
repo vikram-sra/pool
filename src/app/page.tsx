@@ -7,8 +7,37 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
+// --- TYPES ---
+interface Squad {
+  name: string;
+  amount: string;
+}
+
+interface Campaign {
+  id: number;
+  brand: string;
+  title: string;
+  description: string;
+  goal: number;
+  pledged: number;
+  emoji?: string;
+  modelType: string;
+  color: string;
+  deadline: string;
+  squadsCount: string;
+  specs: string[];
+  squads: Squad[];
+}
+
+interface Brand {
+  name: string;
+  totalRaised: string;
+  campaigns: number;
+  hue: string;
+}
+
 // --- DUMMY DATA ---
-const CAMPAIGNS = [
+const CAMPAIGNS: Campaign[] = [
   {
     id: 1,
     brand: "Nike Verified",
@@ -152,7 +181,7 @@ const CAMPAIGNS = [
   }
 ];
 
-const BRANDS = [
+const BRANDS: Brand[] = [
   { name: "Nike", totalRaised: "$4.2M", campaigns: 12, hue: "#00FF41" },
   { name: "Sony", totalRaised: "$2.1M", campaigns: 5, hue: "#00E5FF" },
   { name: "Leica", totalRaised: "$8.5M", campaigns: 3, hue: "#FFD600" },
@@ -274,14 +303,14 @@ function ShapeModel({ type, color, index, currentIndex }: { type: string; color:
   return <group ref={groupRef}>{renderModel()}</group>;
 }
 
-function ThreeScene({ currentCampaign, currentIndex }: { currentCampaign: any, currentIndex: number }) {
+function ThreeScene({ currentCampaign, currentIndex }: { currentCampaign: Campaign, currentIndex: number }) {
   return (
     <>
       <ambientLight intensity={1.2} />
       <directionalLight position={[5, 10, 5]} intensity={2.5} color={currentCampaign.color} />
       <directionalLight position={[-5, 5, -5]} intensity={1.5} color="#ffffff" />
 
-      {CAMPAIGNS.map((campaign, i) => (
+      {CAMPAIGNS.map((campaign: Campaign, i: number) => (
         <ShapeModel key={campaign.id} type={campaign.modelType} color={campaign.color} index={i} currentIndex={currentIndex} />
       ))}
 
@@ -351,7 +380,7 @@ export default function Home() {
 // ==========================================
 // FEED VIEW
 // ==========================================
-function FeedView({ currentIndex, setCurrentIndex, currentCampaign }: { currentIndex: number, setCurrentIndex: any, currentCampaign: any }) {
+function FeedView({ currentIndex, setCurrentIndex, currentCampaign }: { currentIndex: number, setCurrentIndex: React.Dispatch<React.SetStateAction<number>>, currentCampaign: Campaign }) {
   const [pledgeState, setPledgeState] = useState<"initiated" | "escrowed" | "locked">("initiated");
   const [activeView, setActiveView] = useState<"none" | "specs" | "squads">("none");
   const lastScrollTime = useRef<number>(0);
@@ -579,7 +608,7 @@ function FeedView({ currentIndex, setCurrentIndex, currentCampaign }: { currentI
               <div className="flex-1 overflow-y-auto pt-6 no-scrollbar text-[#1C1C1C]">
                 {activeView === "specs" ? (
                   <ul className="flex flex-col gap-4">
-                    {currentCampaign.specs.map((s, i) => (
+                    {currentCampaign.specs.map((s: string, i: number) => (
                       <li key={i} className="flex items-center gap-4 bg-[#E5E3DF] p-4 border-2 border-[#1C1C1C] shadow-[4px_4px_0_0_#1C1C1C] uppercase font-bold text-lg"><div className="w-4 h-4 border border-[#1C1C1C]" style={{ backgroundColor: currentCampaign.color }}></div>{s}</li>
                     ))}
                   </ul>
@@ -587,10 +616,10 @@ function FeedView({ currentIndex, setCurrentIndex, currentCampaign }: { currentI
                   <div className="flex flex-col gap-6">
                     <div className="bg-[#E5E3DF] p-6 border-4 border-[#1C1C1C] uppercase shadow-[4px_4px_0_0_#1C1C1C]">
                       <div className="text-sm font-black text-[#1C1C1C]/50 mb-1 tracking-widest">Total Pooled</div>
-                      <div className="text-4xl font-black tracking-tighter" style={{ color: currentCampaign.color, textShadow: "1px 1px 0 #1C1C1C" }}> ${currentCampaign.squads.reduce((acc, sq) => acc + parseInt(sq.amount.replace(/\D/g, '')) * 100, 0).toLocaleString()} </div>
+                      <div className="text-4xl font-black tracking-tighter" style={{ color: currentCampaign.color, textShadow: "1px 1px 0 #1C1C1C" }}> ${currentCampaign.squads.reduce((acc: number, sq: Squad) => acc + parseInt(sq.amount.replace(/\D/g, '')) * 100, 0).toLocaleString()} </div>
                     </div>
                     <ul className="flex flex-col gap-3">
-                      {currentCampaign.squads.map((sq, i) => (
+                      {currentCampaign.squads.map((sq: Squad, i: number) => (
                         <li key={i} className="flex justify-between bg-white p-4 border-l-8 border-[#1C1C1C] border-2 shadow-[4px_4px_0_0_#1C1C1C] uppercase font-black text-xl" style={{ borderLeftColor: currentCampaign.color }}> <span>{sq.name}</span> <span className="text-[#1C1C1C]/80">{sq.amount}</span> </li>
                       ))}
                     </ul>
@@ -625,7 +654,7 @@ function BrandsView() {
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {BRANDS.map((brand, i) => (
+        {BRANDS.map((brand: Brand, i: number) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-[#E5E3DF] p-5 border-[3px] border-[#1C1C1C] shadow-[4px_4px_0_0_#1C1C1C] hover:bg-[#F5F5F3] transition-colors group cursor-pointer relative overflow-hidden">
 
             <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 group-hover:scale-125 transition-all">
@@ -785,7 +814,7 @@ function TrendsView() {
         <div className="bg-[#1C1C1C] p-6 border-4 border-[#1C1C1C] text-[#F5F5F3] shadow-[8px_8px_0_0_#1C1C1C]">
           <h2 className="text-2xl font-black uppercase tracking-widest mb-4">Trend Clouds</h2>
           <div className="flex flex-wrap gap-3">
-            {["#Y2K_REVIVAL", "#NEOBRUTALISM", "#ANALOG_TECH", "#CYBER_GOTH", "#VANTABLACK", "#CARBON_FIBER", "#TRANSPARENT", "#RAW_ALUMINUM"].map((tag, i) => (
+            {["#Y2K_REVIVAL", "#NEOBRUTALISM", "#ANALOG_TECH", "#CYBER_GOTH", "#VANTABLACK", "#CARBON_FIBER", "#TRANSPARENT", "#RAW_ALUMINUM"].map((tag: string, i: number) => (
               <span key={i} className="px-3 py-1 bg-[#F5F5F3] text-[#1C1C1C] font-bold uppercase text-sm border-2 border-[#1C1C1C] shadow-[2px_2px_0_0_#1C1C1C] hover:bg-[#1C1C1C] hover:text-[#F5F5F3] transition-colors cursor-pointer">{tag}</span>
             ))}
           </div>
