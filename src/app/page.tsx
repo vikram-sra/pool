@@ -76,6 +76,7 @@ export default function Home() {
               isZenMode={isZenMode}
               setIsZenMode={setIsZenMode}
               hasInteracted3D={hasInteracted3D}
+              isPitchOpen={showPitch}
             />
           )}
           {currentTab === "TRENDS" && <TrendsView key="trends" />}

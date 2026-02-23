@@ -27,6 +27,21 @@ body {
   touch-action: pan-y;
 }
 
+/* Prevent 300ms tap delay + ghost taps on iOS for all interactive elements */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* iOS momentum scrolling for all overflow-y-auto containers */
+[class*="overflow-y-auto"] {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Noise */
 body::after {
   content: '';

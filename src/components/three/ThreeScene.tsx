@@ -6,8 +6,27 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import ShapeModel from "./ShapeModel";
 import { CAMPAIGNS } from "@/data/campaigns";
-import { MODEL_RENDER_WINDOW, ORBIT_MIN_DISTANCE, ORBIT_MAX_DISTANCE, ORBIT_DAMPING } from "@/constants";
+import { MODEL_RENDER_WINDOW, ORBIT_MIN_DISTANCE, ORBIT_MAX_DISTANCE, ORBIT_DAMPING, CAMERA_FOV, MODEL_ACTIVE_SCALE } from "@/constants";
 import type { Campaign } from "@/types";
+
+/** Approximate world-space extents (width × height) of each model at scale=1 */
+const MODEL_EXTENTS: Record<string, { w: number; h: number }> = {
+    shoe:     { w: 1.8, h: 1.4 },
+    walkman:  { w: 1.2, h: 1.8 },
+    camera:   { w: 1.8, h: 1.1 },
+    synth:    { w: 2.8, h: 0.5 },
+    watch:    { w: 1.6, h: 2.8 },
+    keyboard: { w: 3.0, h: 1.5 },
+    drone:    { w: 1.8, h: 1.2 },
+    espresso: { w: 1.6, h: 2.0 },
+    speaker:  { w: 1.6, h: 2.3 },
+    suitcase: { w: 1.2, h: 1.9 },
+    shell:    { w: 2.4, h: 2.4 },
+    board:    { w: 3.6, h: 1.0 },
+    console:  { w: 2.0, h: 0.8 },
+    chair:    { w: 1.2, h: 2.5 },
+    earbuds:  { w: 0.8, h: 1.5 },
+};
 
 interface ThreeSceneProps {
     currentCampaign: Campaign;
@@ -18,7 +37,29 @@ interface ThreeSceneProps {
 
 export default function ThreeScene({ currentCampaign, currentIndex, onInteractionStart, onToggleZen }: ThreeSceneProps) {
     const controlsRef = useRef<any>(null);
-    const { gl } = useThree();
+    const { gl, camera, size } = useThree();
+
+    // Fit model to screen: derive camera Z from model extents + FOV so the
+    // active object always fills the viewport width without clipping.
+    useEffect(() => {
+        const aspect = size.width / size.height;
+        const vFovRad = (CAMERA_FOV * Math.PI) / 180;
+        const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
+
+        const ext = MODEL_EXTENTS[currentCampaign.modelType] ?? { w: 2, h: 2 };
+        const scaledW = ext.w * MODEL_ACTIVE_SCALE;
+        const scaledH = ext.h * MODEL_ACTIVE_SCALE;
+
+        // 1.3 = 30% breathing room so model isn't edge-to-edge
+        const PADDING = 1.3;
+        const zForWidth  = (scaledW / 2 / Math.tan(hFovRad  / 2)) * PADDING;
+        const zForHeight = (scaledH / 2 / Math.tan(vFovRad / 2)) * PADDING;
+
+        const targetZ = Math.max(zForWidth, zForHeight, ORBIT_MIN_DISTANCE + 0.5);
+        camera.position.set(0, 0, targetZ);
+        // Persist as "home" so OrbitControls.reset() snaps back here
+        if (controlsRef.current) controlsRef.current.saveState();
+    }, [size, camera, currentCampaign]);
 
     // Release rotation on pointer up
     useEffect(() => {

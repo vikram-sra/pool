@@ -9,16 +9,16 @@ export const WHEEL_DELTA_THRESHOLD = 30;
 export const MODEL_Y_SPREAD = 8;
 export const MODEL_LERP_FACTOR = 0.05;
 export const MODEL_SCALE_LERP = 0.08;
-export const MODEL_ACTIVE_SCALE = 0.5;
+export const MODEL_ACTIVE_SCALE = 0.65;
 export const MODEL_HIDDEN_SCALE = 0.001;
 export const MODEL_VISIBLE_THRESHOLD = 0.01;
 export const MODEL_RENDER_WINDOW = 2; // only render currentIndex ± N
 
 // ── Camera ──
-export const CAMERA_POSITION: [number, number, number] = [0, 0, 5];
-export const CAMERA_FOV = 45;
-export const ORBIT_MIN_DISTANCE = 2;
-export const ORBIT_MAX_DISTANCE = 12;
+export const CAMERA_POSITION: [number, number, number] = [0, 0, 4];
+export const CAMERA_FOV = 50;
+export const ORBIT_MIN_DISTANCE = 1.5;
+export const ORBIT_MAX_DISTANCE = 10;
 export const ORBIT_DAMPING = 0.15;
 
 // ── Lifecycle ──
