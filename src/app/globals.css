@@ -1,27 +1,229 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0B0F19;
-  --foreground: #F1F5F9;
-  --electric-green: #00FF41;
-  --card-bg: #111827;
-  --border-color: #1E293B;
+  --background: #E5E3DF;
+  --foreground: #1C1C1C;
+  --surface: #F5F5F3;
+  --electric-green: #34D399;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
   --color-electric-green: var(--electric-green);
-  --color-card: var(--card-bg);
-  --color-border: var(--border-color);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
+  background: #000;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+
+/* Noise */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+::selection {
+  background: var(--foreground);
+  color: white;
+}
+
+/* ── Scrollbar ── */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Glass ── */
+.glass {
+  background: rgba(245, 245, 243, 0.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.glass-dark {
+  background: rgba(28, 28, 28, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-heavy {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+}
+
+/* ── Shimmer ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0
+  }
+
+  100% {
+    background-position: 200% 0
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255, 255, 255, 0.25) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ── Pulse ring ── */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1
+  }
+
+  100% {
+    transform: scale(2.5);
+    opacity: 0
+  }
+}
+
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ── Float ── */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0)
+  }
+
+  50% {
+    transform: translateY(-6px)
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ── Progress Glow ── */
+@keyframes progress-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.3)
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.6), 0 0 40px rgba(0, 255, 65, 0.2)
+  }
+}
+
+.progress-glow {
+  animation: progress-glow 2s ease-in-out infinite;
+}
+
+/* ── Gradient Text ── */
+.gradient-text {
+  background: linear-gradient(135deg, #34D399, #38BDF8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Gradient Border Spin ── */
+@property --angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes border-spin {
+  0% {
+    --angle: 0deg
+  }
+
+  100% {
+    --angle: 360deg
+  }
+}
+
+/* ── Dot Grid ── */
+.dot-grid {
+  background-image: radial-gradient(rgba(28, 28, 28, 0.06) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* ── Tabular ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Double-Tap Heart ── */
+@keyframes heart-burst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.heart-burst {
+  animation: heart-burst 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ── Safe area padding ── */
+.pb-safe {
+  padding-bottom: max(16px, var(--safe-bottom));
+}
+
+.pt-safe {
+  padding-top: max(8px, var(--safe-top));
+}
+
+/* ── Full bleed ── */
+.full-bleed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
