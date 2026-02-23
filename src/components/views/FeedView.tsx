@@ -21,11 +21,12 @@ interface FeedViewProps {
     isZenMode: boolean;
     setIsZenMode: (val: boolean) => void;
     hasInteracted3D: boolean;
+    isPitchOpen?: boolean;
 }
 
 export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
-    currentTab, isZenMode, setIsZenMode, hasInteracted3D,
+    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen,
 }: FeedViewProps) {
     const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>({});
     const [liked, setLiked] = useState<Record<number, boolean>>({});
@@ -47,7 +48,7 @@ export default function FeedView({
     // ── WHEEL scroll (desktop) ──
     useEffect(() => {
         const onWheel = (e: WheelEvent) => {
-            if (e.ctrlKey || activeSheet !== "none" || showModal) return;
+            if (e.ctrlKey || activeSheet !== "none" || showModal || isPitchOpen) return;
             const now = Date.now();
             if (now - lastScrollTime.current < SCROLL_COOLDOWN_MS) return;
             if (Math.abs(e.deltaY) > WHEEL_DELTA_THRESHOLD) {
@@ -57,44 +58,84 @@ export default function FeedView({
         };
         window.addEventListener("wheel", onWheel, { passive: true });
         return () => window.removeEventListener("wheel", onWheel);
-    }, [activeSheet, showModal, handleNext, handlePrev]);
+    }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev]);
 
-    // ── TOUCH swipe (mobile) — simple, no library ──
+    // ── TOUCH swipe (mobile) — direction-lock gesture system ──
     useEffect(() => {
         let startY = 0;
+        let startX = 0;
         let startTime = 0;
-        let startedOnCanvas = false;
+        // "detecting" → waiting for direction lock; "swiping" → vertical confirmed; "blocked" → rotation/pinch/overlay
+        let phase: "idle" | "detecting" | "swiping" | "blocked" = "idle";
 
         const onTouchStart = (e: TouchEvent) => {
             const t = e.target as HTMLElement;
-            startedOnCanvas = !!t.closest("canvas");
-            if (t.closest("button") || t.closest("input") || t.closest("textarea") || startedOnCanvas) return;
+            // Never hijack UI controls or multi-touch (pinch)
+            if (t.closest("button") || t.closest("input") || t.closest("textarea")) return;
+            if (e.touches.length > 1) return;
             startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
             startTime = Date.now();
+            phase = "detecting";
+        };
+
+        const onTouchMove = (e: TouchEvent) => {
+            if (phase !== "detecting") return;
+            // Any overlay open → block
+            if (activeSheet !== "none" || showModal || isPitchOpen) { phase = "blocked"; return; }
+            // Pinch started → block (let OrbitControls handle zoom)
+            if (e.touches.length > 1) { phase = "blocked"; return; }
+
+            const dy = e.touches[0].clientY - startY;
+            const dx = e.touches[0].clientX - startX;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            // Wait for enough movement before committing (prevents ghost taps)
+            if (dist < 10) return;
+
+            // If the pointer already hit a 3D model (set by R3F pointerdown → onInteractionStart),
+            // let OrbitControls handle rotation — don't swipe
+            if (isInteractingWithObject.current) { phase = "blocked"; return; }
+
+            // Direction lock: must be predominantly vertical to qualify as a feed swipe
+            if (Math.abs(dy) > Math.abs(dx) * 1.2) {
+                phase = "swiping";
+            } else {
+                phase = "blocked"; // horizontal → 3D rotation intent
+            }
         };
 
         const onTouchEnd = (e: TouchEvent) => {
-            if (startedOnCanvas || activeSheet !== "none" || showModal) return;
+            if (phase !== "swiping") { phase = "idle"; return; }
+
             const endY = e.changedTouches[0].clientY;
             const dist = startY - endY;
             const elapsed = Date.now() - startTime;
             const now = Date.now();
+            phase = "idle";
+
             if (now - lastScrollTime.current < SCROLL_COOLDOWN_MS) return;
 
-            // Need at least 60px swipe OR fast flick (>0.3 px/ms and >30px)
-            if (Math.abs(dist) > 60 || (elapsed < 300 && Math.abs(dist) > 30)) {
+            const isFlick = elapsed < 350 && Math.abs(dist) > 25;
+            const isSwipe = Math.abs(dist) > 70;
+            if (isFlick || isSwipe) {
                 dist > 0 ? handleNext() : handlePrev();
                 lastScrollTime.current = now;
             }
         };
 
+        const onTouchCancel = () => { phase = "idle"; };
+
         window.addEventListener("touchstart", onTouchStart, { passive: true });
+        window.addEventListener("touchmove", onTouchMove, { passive: true });
         window.addEventListener("touchend", onTouchEnd, { passive: true });
+        window.addEventListener("touchcancel", onTouchCancel, { passive: true });
         return () => {
             window.removeEventListener("touchstart", onTouchStart);
+            window.removeEventListener("touchmove", onTouchMove);
             window.removeEventListener("touchend", onTouchEnd);
+            window.removeEventListener("touchcancel", onTouchCancel);
         };
-    }, [activeSheet, showModal, handleNext, handlePrev]);
+    }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev, isInteractingWithObject]);
 
     const handlePledge = (campaignId: number) => {
         const current = pledgeStates[campaignId] ?? "initiated";
@@ -138,22 +179,22 @@ export default function FeedView({
 
             {/* ── VIGNETTE ── */}
             <div className="absolute inset-0 pointer-events-none z-[1]">
-                <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/35 via-black/8 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-[55%] bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
             </div>
 
             {/* ── TOP BAR ── */}
             <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-500 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
                 <div className="flex items-center justify-between px-3 py-2">
-                    <div className="flex items-center bg-black/25 backdrop-blur-sm rounded-full p-0.5">
+                    <div className="flex items-center bg-black/50 backdrop-blur-md rounded-full p-0.5">
                         {(["foryou", "trending"] as const).map(tab => (
-                            <button key={tab} onClick={() => setFeedTab(tab)} className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all ${feedTab === tab ? "bg-white/90 text-[#1C1C1C]" : "text-white/50"}`}>
+                            <button key={tab} onClick={() => setFeedTab(tab)} className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${feedTab === tab ? "bg-white/90 text-[#1C1C1C]" : "text-white/75"}`}>
                                 {tab === "foryou" ? "For You" : "Trending"}
                             </button>
                         ))}
                     </div>
-                    <div className="bg-black/25 backdrop-blur-sm rounded-full px-2.5 py-1">
-                        <span className="text-[9px] font-bold text-white/50 tabular-nums">
-                            {String(currentIndex + 1).padStart(2, "0")}<span className="text-white/15 mx-0.5">/</span>{CAMPAIGNS.length}
+                    <div className="bg-black/50 backdrop-blur-md rounded-full px-2.5 py-1">
+                        <span className="text-[10px] font-bold text-white/80 tabular-nums">
+                            {String(currentIndex + 1).padStart(2, "0")}<span className="text-white/35 mx-0.5">/</span>{CAMPAIGNS.length}
                         </span>
                     </div>
                 </div>
@@ -172,40 +213,40 @@ export default function FeedView({
             </AnimatePresence>
 
             {/* ── RIGHT SIDEBAR ── */}
-            <div className={`absolute right-1.5 z-30 pointer-events-auto flex flex-col items-center gap-2.5 transition-all duration-500 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "95px" }}>
-                <div className="relative mb-0.5">
-                    <div className="w-9 h-9 rounded-full border-[1.5px] border-white/80 flex items-center justify-center font-bold text-[10px] text-white shadow-md" style={{ backgroundColor: currentCampaign.color }}>
+            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-4 transition-all duration-500 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "88px" }}>
+                <div className="relative mb-1">
+                    <div className="w-11 h-11 rounded-full border-2 border-white/90 flex items-center justify-center font-bold text-[11px] text-white shadow-lg" style={{ backgroundColor: currentCampaign.color }}>
                         {currentCampaign.brand.charAt(0)}
                     </div>
                 </div>
-                <SideBtn icon={<Heart size={22} strokeWidth={isLiked ? 0 : 1.8} className={isLiked ? "fill-[#34D399] text-[#34D399]" : "text-white/80"} />} label={String(currentCampaign.backers ?? 0)} onClick={() => setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked }))} />
-                <SideBtn icon={<MessageCircle size={22} className="text-white/80" />} label={currentCampaign.squadsCount} onClick={() => setActiveSheet("comments")} />
-                <SideBtn icon={<Bookmark size={20} strokeWidth={isSaved ? 0 : 1.8} className={isSaved ? "fill-[#FBBF24] text-[#FBBF24]" : "text-white/80"} />} label="Save" onClick={() => setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved }))} />
-                <SideBtn icon={<Share2 size={20} className="text-white/80" />} label="Share" onClick={() => { }} />
+                <SideBtn icon={<Heart size={26} strokeWidth={isLiked ? 0 : 1.8} className={isLiked ? "fill-[#34D399] text-[#34D399]" : "text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"} />} label={String(currentCampaign.backers ?? 0)} onClick={() => setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked }))} />
+                <SideBtn icon={<MessageCircle size={26} className="text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]" />} label={currentCampaign.squadsCount} onClick={() => setActiveSheet("comments")} />
+                <SideBtn icon={<Bookmark size={24} strokeWidth={isSaved ? 0 : 1.8} className={isSaved ? "fill-[#FBBF24] text-[#FBBF24]" : "text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"} />} label="Save" onClick={() => setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved }))} />
+                <SideBtn icon={<Share2 size={24} className="text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]" />} label="Share" onClick={() => { }} />
             </div>
 
             {/* ── BOTTOM INFO ── */}
-            <div className={`absolute bottom-[48px] left-0 right-[44px] z-20 px-3 transition-all duration-500 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}>
+            <div className={`absolute bottom-[76px] left-0 right-[56px] z-20 px-3 transition-all duration-500 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}>
                 <AnimatePresence mode="popLayout">
                     <motion.div key={currentCampaign.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>
                         <div className="mb-1 w-fit"><LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact /></div>
                         <div className="flex items-center gap-1 mb-0.5">
-                            <span className="text-white/70 font-semibold text-[9px] uppercase tracking-wider">{currentCampaign.brand}</span>
-                            <CheckCircle2 size={8} className="text-blue-400/60" />
+                            <span className="text-white font-semibold text-[10px] uppercase tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">{currentCampaign.brand}</span>
+                            <CheckCircle2 size={9} className="text-blue-300" />
                         </div>
-                        <h2 className="text-white font-black text-[17px] uppercase tracking-tight leading-tight mb-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+                        <h2 className="text-white font-black text-[18px] uppercase tracking-tight leading-tight mb-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
                             {currentCampaign.title}
                         </h2>
-                        <p className="text-white/40 text-[9px] font-medium leading-snug mb-2 line-clamp-1">
+                        <p className="text-white/75 text-[10px] font-medium leading-snug mb-2.5 line-clamp-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
                             {currentCampaign.description}
                         </p>
 
                         <div className="pointer-events-auto">
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <div className="flex-1 h-[3px] bg-white/8 rounded-full overflow-hidden">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex-1 h-[4px] bg-white/20 rounded-full overflow-hidden">
                                     <motion.div initial={false} animate={{ width: `${progressPercent}%` }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full" style={{ backgroundColor: currentCampaign.color }} />
                                 </div>
-                                <span className="text-white/25 text-[8px] font-bold tabular-nums">{Math.round(progressPercent)}%</span>
+                                <span className="text-white/70 text-[9px] font-bold tabular-nums">{Math.round(progressPercent)}%</span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
@@ -213,22 +254,22 @@ export default function FeedView({
                                     whileTap={{ scale: 0.96 }}
                                     onClick={() => setShowModal(true)}
                                     disabled={currentPledgeState !== "initiated"}
-                                    className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider text-[10px] transition-all ${currentPledgeState === "initiated" ? "text-[#1C1C1C]"
-                                            : currentPledgeState === "escrowed" ? "bg-white/8 text-white/70"
-                                                : "bg-white/5 text-white/40"
+                                    className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider text-[11px] transition-all ${currentPledgeState === "initiated" ? "text-[#1C1C1C]"
+                                            : currentPledgeState === "escrowed" ? "bg-white/15 text-white/90"
+                                                : "bg-white/10 text-white/60"
                                         }`}
                                     style={currentPledgeState === "initiated" ? { backgroundColor: currentCampaign.color } : undefined}
                                 >
-                                    {currentPledgeState === "initiated" ? (<><Lock size={11} /> Lock $100</>) : currentPledgeState === "escrowed" ? (<><Zap size={11} className="animate-spin" /> Securing...</>) : (<><CheckCircle2 size={11} /> Secured</>)}
+                                    {currentPledgeState === "initiated" ? (<><Lock size={12} /> Lock $100</>) : currentPledgeState === "escrowed" ? (<><Zap size={12} className="animate-spin" /> Securing...</>) : (<><CheckCircle2 size={12} /> Secured</>)}
                                 </motion.button>
-                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActiveSheet("squads")} className="py-2 px-3 rounded-lg bg-white/8 flex items-center gap-1 text-white/50 text-[9px] font-bold">
-                                    <Users size={11} /> {currentCampaign.squadsCount}
+                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActiveSheet("squads")} className="py-2.5 px-3.5 rounded-lg bg-white/15 flex items-center gap-1 text-white/85 text-[10px] font-bold">
+                                    <Users size={12} /> {currentCampaign.squadsCount}
                                 </motion.button>
                             </div>
 
-                            <div className="flex items-center gap-1 mt-1">
-                                <ShieldCheck size={7} className="text-[#34D399]/60" />
-                                <span className="text-white/15 text-[7px] font-medium uppercase tracking-wider">Escrow protected · {currentCampaign.deadline}</span>
+                            <div className="flex items-center gap-1 mt-1.5">
+                                <ShieldCheck size={8} className="text-[#34D399]" />
+                                <span className="text-white/55 text-[8px] font-medium uppercase tracking-wider">Escrow protected · {currentCampaign.deadline}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -342,9 +383,9 @@ export default function FeedView({
 
 function SideBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
     return (
-        <motion.button onClick={onClick} whileTap={{ scale: 0.85 }} className="flex flex-col items-center gap-0">
+        <motion.button onClick={onClick} whileTap={{ scale: 0.85 }} className="flex flex-col items-center gap-0.5">
             {icon}
-            <span className="text-white/40 text-[8px] font-medium">{label}</span>
+            <span className="text-white/85 text-[9px] font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">{label}</span>
         </motion.button>
     );
 }

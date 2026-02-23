@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CloudLightning, Target, Zap, Edit3, Users, X, ArrowLeft, TrendingUp } from "lucide-react";
-import Image from "next/image";
 import { CAMPAIGNS } from "@/data/campaigns";
 import { CATEGORIES } from "@/constants";
 import type { Campaign } from "@/types";
@@ -21,7 +20,7 @@ export default function TrendsView() {
     if (selectedCampaign) {
         const progress = (selectedCampaign.pledged / selectedCampaign.goal) * 100;
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe pointer-events-auto">
                 <div className="max-w-4xl mx-auto p-5 md:p-10">
                     <button onClick={() => setSelectedCampaign(null)} className="flex items-center gap-2 text-[#1C1C1C]/50 font-black uppercase tracking-widest text-[10px] mb-8 hover:text-[#1C1C1C] transition-colors group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back
@@ -91,7 +90,7 @@ export default function TrendsView() {
 
     // ── MAIN TRENDS VIEW ──
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe pointer-events-auto">
             <div className="max-w-7xl mx-auto p-5 md:p-10">
 
                 {/* Header */}
@@ -168,7 +167,7 @@ export default function TrendsView() {
                         </div>
 
                         {/* Campaign Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                             <AnimatePresence mode="popLayout">
                                 {filteredCampaigns.map((campaign, i) => {
                                     const pct = Math.round((campaign.pledged / campaign.goal) * 100);
@@ -186,36 +185,37 @@ export default function TrendsView() {
                                             {/* Hover glow */}
                                             <div className="absolute -inset-1 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-500" style={{ backgroundColor: campaign.color }} />
 
-                                            <div className="relative glass rounded-2xl border border-[#1C1C1C]/5 overflow-hidden group-hover:border-[#1C1C1C]/15 group-hover:shadow-md transition-all duration-300">
-                                                {/* Thumbnail */}
-                                                <div className="w-full h-24 md:h-44 bg-[#1C1C1C] relative overflow-hidden">
-                                                    {campaign.image ? (
-                                                        <Image src={campaign.image} alt={campaign.title} fill sizes="(max-width:768px) 50vw,300px" className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1C1C1C] to-[#2C2C2C]">
-                                                            <span className="text-white/10 font-black text-[10px] uppercase tracking-widest">{campaign.modelType}</span>
+                                            <div className="relative bg-white rounded-2xl border border-[#1C1C1C]/8 overflow-hidden group-hover:border-[#1C1C1C]/15 group-hover:shadow-md transition-all duration-300">
+                                                {/* Data-driven thumbnail */}
+                                                <div className="w-full h-36 md:h-44 relative overflow-hidden" style={{ background: `linear-gradient(145deg, ${campaign.color}1a 0%, ${campaign.color}08 100%)` }}>
+                                                    {/* Radial glow */}
+                                                    <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 45% 55%, ${campaign.color}2e 0%, transparent 65%)` }} />
+                                                    {/* Centerpiece: brand icon + model type */}
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ backgroundColor: `${campaign.color}1a`, border: `1.5px solid ${campaign.color}30` }}>
+                                                            <span className="text-lg md:text-xl font-black leading-none" style={{ color: campaign.color }}>{campaign.brand[0]}</span>
                                                         </div>
-                                                    )}
-                                                    <div className="absolute top-2 left-2 glass-dark text-white px-1.5 py-0.5 text-[7px] md:text-[8px] font-black uppercase tracking-widest rounded-md">{campaign.category}</div>
-                                                    <div className="absolute bottom-2 right-2 w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)]" style={{ backgroundColor: campaign.color, boxShadow: `0 0 8px ${campaign.color}60` }} />
+                                                        <span className="text-[7px] font-black uppercase tracking-[0.18em] text-[#1C1C1C]/25">{campaign.modelType}</span>
+                                                    </div>
+                                                    {/* Lifecycle chip top-left */}
+                                                    <div className="absolute top-2.5 left-2.5">
+                                                        <span className="px-1.5 py-[3px] text-[6.5px] font-black uppercase tracking-widest rounded-md text-white" style={{ backgroundColor: campaign.color }}>{campaign.lifecycle}</span>
+                                                    </div>
+                                                    {/* Deadline bottom-right */}
+                                                    <div className="absolute bottom-2.5 right-2.5">
+                                                        <span className="text-[7px] font-black uppercase" style={{ color: campaign.color }}>{campaign.deadline}</span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="p-3 md:p-4 flex flex-col">
-                                                    <h4 className="text-[11px] md:text-base font-black uppercase tracking-tighter text-[#1C1C1C] mb-0.5 line-clamp-1 group-hover:text-blue-600 transition-colors">{campaign.title}</h4>
-                                                    <p className="text-[8px] md:text-[10px] font-semibold text-[#1C1C1C]/40 mb-2 md:mb-3">{campaign.brand}</p>
-
-                                                    <div className="hidden md:block mb-3"><LifecycleTracker currentStage={campaign.lifecycle} color={campaign.color} compact /></div>
-
-                                                    <div className="mt-auto space-y-1.5">
-                                                        <div className="flex justify-between text-[7px] md:text-[9px] font-black uppercase tracking-widest">
-                                                            <span className="flex items-center gap-0.5 text-[#1C1C1C]/40"><Users size={8} /> {campaign.squadsCount}</span>
-                                                            <span style={{ color: campaign.color }} className="tabular-nums">{pct}%</span>
-                                                        </div>
-                                                        <div className="w-full h-1 md:h-1.5 bg-[#1C1C1C]/5 rounded-full overflow-hidden">
-                                                            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full rounded-full relative overflow-hidden" style={{ backgroundColor: campaign.color }}>
-                                                                <div className="absolute inset-0 shimmer" />
-                                                            </motion.div>
-                                                        </div>
+                                                <div className="p-3 md:p-4">
+                                                    <h4 className="text-[11px] md:text-sm font-black uppercase tracking-tighter text-[#1C1C1C] mb-0.5 line-clamp-1">{campaign.title}</h4>
+                                                    <p className="text-[8px] md:text-[9px] font-semibold text-[#1C1C1C]/40 mb-2.5">{campaign.brand}</p>
+                                                    <div className="flex justify-between text-[7px] md:text-[8px] font-black uppercase mb-1.5">
+                                                        <span className="flex items-center gap-0.5 text-[#1C1C1C]/35"><Users size={7} />{campaign.squadsCount}</span>
+                                                        <span className="tabular-nums" style={{ color: campaign.color }}>{pct}%</span>
+                                                    </div>
+                                                    <div className="w-full h-1 md:h-1.5 bg-[#1C1C1C]/6 rounded-full overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full rounded-full" style={{ backgroundColor: campaign.color }} />
                                                     </div>
                                                 </div>
                                             </div>

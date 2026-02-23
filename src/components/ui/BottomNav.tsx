@@ -35,11 +35,11 @@ export default function BottomNav({ currentTab, setCurrentTab, hidden, onPitch }
                 ))}
 
                 {/* Center Pitch Button */}
-                <button className="flex flex-col items-center gap-0.5 py-1.5 pointer-events-auto" onClick={onPitch}>
-                    <div className="w-10 h-7 rounded-lg bg-[#1C1C1C] flex items-center justify-center shadow-md active:scale-90 transition-transform">
-                        <Plus size={18} strokeWidth={2.5} className="text-white" />
+                <button className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 pointer-events-auto" onClick={onPitch}>
+                    <div className="w-12 h-9 rounded-xl bg-[#1C1C1C] flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                        <Plus size={20} strokeWidth={2.5} className="text-white" />
                     </div>
-                    <span className={`text-[8px] font-bold ${isFeed ? "text-white/50" : "text-[#1C1C1C]/40"}`}>Pitch</span>
+                    <span className={`text-[9px] font-bold ${isFeed ? "text-white/55" : "text-[#1C1C1C]/45"}`}>Pitch</span>
                 </button>
 
                 {TABS.slice(2).map((tab) => (
@@ -57,13 +57,18 @@ function NavButton({ tab, isActive, isFeed, onClick }: {
     onClick: () => void;
 }) {
     const color = isFeed
-        ? isActive ? "text-white" : "text-white/35"
-        : isActive ? "text-[#1C1C1C]" : "text-[#1C1C1C]/25";
+        ? isActive ? "text-white" : "text-white/40"
+        : isActive ? "text-[#1C1C1C]" : "text-[#1C1C1C]/30";
 
     return (
-        <button onClick={onClick} className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 pointer-events-auto">
-            <tab.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} className={`transition-colors ${color}`} />
-            <span className={`text-[8px] font-bold transition-colors ${color}`}>{tab.label}</span>
+        <button onClick={onClick} className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 pointer-events-auto relative">
+            <tab.icon size={22} strokeWidth={isActive ? 2.5 : 1.5} className={`transition-colors ${color}`} />
+            <span className={`text-[9px] font-bold transition-colors ${color}`}>{tab.label}</span>
+            {isActive && (
+                <span
+                    className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-opacity ${isFeed ? "bg-white" : "bg-[#1C1C1C]"}`}
+                />
+            )}
         </button>
     );
 }

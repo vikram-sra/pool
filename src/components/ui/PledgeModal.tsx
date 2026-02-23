@@ -29,7 +29,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-[#1C1C1C]/40 backdrop-blur-2xl z-[100] flex items-end md:items-center justify-center"
+                    className="fixed inset-0 bg-[#1C1C1C]/40 backdrop-blur-2xl z-[100] flex items-end md:items-center justify-center pointer-events-auto"
                     onClick={onClose}
                 >
                     <motion.div
@@ -46,7 +46,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                         </div>
 
                         {/* Header */}
-                        <div className="sticky top-0 z-10 p-4 md:p-6 flex justify-between items-start">
+                        <div className="p-4 md:p-6 flex justify-between items-start border-b border-[#1C1C1C]/5">
                             <div>
                                 <div className="text-[9px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-1">Secure Pledge</div>
                                 <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-[#1C1C1C]">{campaign.title}</h2>
@@ -57,7 +57,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto max-h-[calc(90vh-100px)] no-scrollbar px-4 md:px-6 pb-6 space-y-5">
+                        <div className="overflow-y-auto max-h-[calc(90vh-120px)] no-scrollbar px-4 md:px-6 pb-safe space-y-5">
                             {/* Lifecycle */}
                             <div className="glass rounded-xl p-4 border border-[#1C1C1C]/5">
                                 <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-3">Campaign Stage</div>
