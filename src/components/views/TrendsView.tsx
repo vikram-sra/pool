@@ -30,7 +30,7 @@ export default function TrendsView() {
     if (selectedCampaign) {
         const progress = (selectedCampaign.pledged / selectedCampaign.goal) * 100;
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe pointer-events-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent dot-grid pt-safe pointer-events-auto">
                 <div className="max-w-4xl mx-auto p-5 md:p-10">
                     <button onClick={() => setSelectedCampaign(null)} className="flex items-center gap-2 text-[#1C1C1C]/50 font-black uppercase tracking-widest text-[10px] mb-8 hover:text-[#1C1C1C] transition-colors group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back
@@ -100,7 +100,7 @@ export default function TrendsView() {
 
     // ── MAIN TRENDS VIEW ──
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-[#F5F4F0] dot-grid pt-safe pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent dot-grid pt-safe pointer-events-auto">
             <div className="max-w-7xl mx-auto p-5 md:p-10">
 
                 {/* Header */}

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ShieldCheck, CheckCircle2, Lock, Users, Zap, Info, X, Share2,
-    Bookmark, MessageCircle, Heart,
+    Bookmark, MessageCircle, Heart, Maximize2,
 } from "lucide-react";
 import { CAMPAIGNS } from "@/data/campaigns";
 import { SCROLL_COOLDOWN_MS, SWIPE_COOLDOWN_MS, WHEEL_DELTA_THRESHOLD } from "@/constants";
@@ -22,11 +22,12 @@ interface FeedViewProps {
     setIsZenMode: (val: boolean) => void;
     hasInteracted3D: boolean;
     isPitchOpen?: boolean;
+    dragProgressRef: React.MutableRefObject<number>;
 }
 
 export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
-    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen,
+    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen, dragProgressRef,
 }: FeedViewProps) {
     const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>(() => {
         try { return JSON.parse(localStorage.getItem('dp-pledges') ?? '{}'); } catch { return {}; }
@@ -60,6 +61,8 @@ export default function FeedView({
             if (e.ctrlKey || activeSheet !== "none" || showModal || isPitchOpen) return;
             const now = Date.now();
             if (now - lastScrollTime.current < SCROLL_COOLDOWN_MS) return;
+            // Require a deliberate scroll — accumulate delta and only fire once
+            // it clearly exceeds the threshold (prevents trackpad micro-nudges)
             if (Math.abs(e.deltaY) > WHEEL_DELTA_THRESHOLD) {
                 e.deltaY > 0 ? handleNext() : handlePrev();
                 lastScrollTime.current = now;
@@ -69,70 +72,90 @@ export default function FeedView({
         return () => window.removeEventListener("wheel", onWheel);
     }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev]);
 
-    // ── TOUCH swipe (mobile) — direction-lock gesture system ──
+    // ── TOUCH swipe (mobile) — direction-lock gesture system with live drag ──
     useEffect(() => {
         let startY = 0;
         let startX = 0;
         let startTime = 0;
-        // "detecting" → waiting for direction lock; "swiping" → vertical confirmed; "blocked" → rotation/pinch/overlay
+        let lastMoveY = 0;
+        let lastMoveTime = 0;
         let phase: "idle" | "detecting" | "swiping" | "blocked" = "idle";
 
         const onTouchStart = (e: TouchEvent) => {
             const t = e.target as HTMLElement;
-            // Never hijack UI controls or multi-touch (pinch)
             if (t.closest("button") || t.closest("input") || t.closest("textarea")) return;
             if (e.touches.length > 1) return;
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
-            startTime = Date.now();
+            lastMoveY = startY;
+            lastMoveTime = Date.now();
+            startTime = lastMoveTime;
             phase = "detecting";
         };
 
         const onTouchMove = (e: TouchEvent) => {
+            if (phase === "swiping") {
+                const dy = e.touches[0].clientY - startY;
+                // * 1.4: need ~70% screen drag to fully reveal adjacent model
+                const raw = -(dy / window.innerHeight) * 1.4;
+                dragProgressRef.current = Math.max(-1, Math.min(1, raw));
+                lastMoveY = e.touches[0].clientY;
+                lastMoveTime = Date.now();
+                return;
+            }
+
             if (phase !== "detecting") return;
-            // Any overlay open → block
             if (activeSheet !== "none" || showModal || isPitchOpen) { phase = "blocked"; return; }
-            // Pinch started → block (let OrbitControls handle zoom)
             if (e.touches.length > 1) { phase = "blocked"; return; }
 
             const dy = e.touches[0].clientY - startY;
             const dx = e.touches[0].clientX - startX;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            // Wait for enough movement before committing (prevents ghost taps)
-            if (dist < 10) return;
+            if (dist < 12) return;
 
-            // If the pointer already hit a 3D model (set by R3F pointerdown → onInteractionStart),
-            // let OrbitControls handle rotation — don't swipe
             if (isInteractingWithObject.current) { phase = "blocked"; return; }
 
-            // Direction lock: must be predominantly vertical to qualify as a feed swipe
-            if (Math.abs(dy) > Math.abs(dx) * 1.2) {
+            if (Math.abs(dy) > Math.abs(dx) * 1.3) {
                 phase = "swiping";
+                const raw = -(dy / window.innerHeight) * 1.4;
+                dragProgressRef.current = Math.max(-1, Math.min(1, raw));
+                lastMoveY = e.touches[0].clientY;
+                lastMoveTime = Date.now();
             } else {
-                phase = "blocked"; // horizontal → 3D rotation intent
+                phase = "blocked";
             }
         };
 
         const onTouchEnd = (e: TouchEvent) => {
+            dragProgressRef.current = 0;
+
             if (phase !== "swiping") { phase = "idle"; return; }
 
             const endY = e.changedTouches[0].clientY;
-            const dist = startY - endY;
-            const elapsed = Date.now() - startTime;
+            const totalDist = startY - endY;
             const now = Date.now();
             phase = "idle";
 
             if (now - lastScrollTime.current < SWIPE_COOLDOWN_MS) return;
 
-            const isFlick = elapsed < 350 && Math.abs(dist) > 25;
-            const isSwipe = Math.abs(dist) > 70;
+            // Velocity-based flick: more reliable than time-only detection
+            const dt = now - lastMoveTime;
+            const recentDy = lastMoveY - endY;
+            const velocity = dt > 0 ? Math.abs(recentDy) / dt : 0; // px/ms
+
+            const isFlick = velocity > 0.4 && Math.abs(totalDist) > 20;
+            const isSwipe = Math.abs(totalDist) > 80;
+
             if (isFlick || isSwipe) {
-                dist > 0 ? handleNext() : handlePrev();
+                totalDist > 0 ? handleNext() : handlePrev();
                 lastScrollTime.current = now;
             }
         };
 
-        const onTouchCancel = () => { phase = "idle"; };
+        const onTouchCancel = () => {
+            dragProgressRef.current = 0;
+            phase = "idle";
+        };
 
         window.addEventListener("touchstart", onTouchStart, { passive: true });
         window.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -144,12 +167,12 @@ export default function FeedView({
             window.removeEventListener("touchend", onTouchEnd);
             window.removeEventListener("touchcancel", onTouchCancel);
         };
-    }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev, isInteractingWithObject]);
+    }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev, isInteractingWithObject, dragProgressRef]);
 
     // Persist to localStorage
-    useEffect(() => { try { localStorage.setItem('dp-pledges', JSON.stringify(pledgeStates)); } catch {} }, [pledgeStates]);
-    useEffect(() => { try { localStorage.setItem('dp-liked', JSON.stringify(liked)); } catch {} }, [liked]);
-    useEffect(() => { try { localStorage.setItem('dp-saved', JSON.stringify(saved)); } catch {} }, [saved]);
+    useEffect(() => { try { localStorage.setItem('dp-pledges', JSON.stringify(pledgeStates)); } catch { } }, [pledgeStates]);
+    useEffect(() => { try { localStorage.setItem('dp-liked', JSON.stringify(liked)); } catch { } }, [liked]);
+    useEffect(() => { try { localStorage.setItem('dp-saved', JSON.stringify(saved)); } catch { } }, [saved]);
 
     const handlePledge = (campaignId: number) => {
         const current = pledgeStates[campaignId] ?? "initiated";
@@ -161,7 +184,7 @@ export default function FeedView({
 
     const handleShare = async () => {
         const data = { title: `${currentCampaign.title} — The Demand Pool`, text: `${currentCampaign.title} by ${currentCampaign.brand}`, url: window.location.href };
-        try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(window.location.href); } catch {}
+        try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(window.location.href); } catch { }
     };
 
     const handlePostComment = () => {
@@ -252,6 +275,9 @@ export default function FeedView({
                         <div className="bg-black/30 backdrop-blur-sm rounded-full text-white text-[8px] font-medium uppercase tracking-widest px-2.5 py-1 opacity-60">
                             Pinch to zoom
                         </div>
+                        <div className="bg-black/30 backdrop-blur-sm rounded-full text-white text-[8px] font-medium uppercase tracking-widest px-2.5 py-1 opacity-45 flex items-center gap-1.5">
+                            <Maximize2 size={9} /> Tap for full screen
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -270,24 +296,32 @@ export default function FeedView({
             </div>
 
             {/* ── BOTTOM INFO ── */}
-            <div className={`absolute bottom-[76px] left-0 right-[56px] z-20 px-3 transition-all duration-500 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}>
-                <AnimatePresence mode="popLayout">
-                    <motion.div key={currentCampaign.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>
-                        <div className="mb-1 w-fit"><LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact /></div>
-                        <div className="flex items-center gap-1 mb-0.5">
+            <div className={`absolute bottom-[70px] left-0 right-[56px] z-20 px-3 transition-all duration-500 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}>
+                {/* mode="wait" ensures old content fully exits before new content enters,
+                    preventing the ghost where both campaign infos overlap mid-transition */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentCampaign.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                        <div className="mb-0.5 w-fit"><LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact /></div>
+                        <div className="flex items-center gap-1">
                             <span className="text-white font-semibold text-[10px] uppercase tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">{currentCampaign.brand}</span>
                             <CheckCircle2 size={9} className="text-blue-300" />
                         </div>
-                        <h2 className="text-white font-black text-[18px] uppercase tracking-tight leading-tight mb-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
+                        <h2 className="text-white font-black text-[15px] uppercase tracking-tight leading-tight mb-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
                             {currentCampaign.title}
                         </h2>
-                        <p className="text-white/75 text-[10px] font-medium leading-snug mb-2.5 line-clamp-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+                        <p className="text-white/75 text-[10px] font-medium leading-snug mb-1.5 line-clamp-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
                             {currentCampaign.description}
                         </p>
 
                         <div className="pointer-events-auto">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="flex-1 h-[4px] bg-white/20 rounded-full overflow-hidden">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="flex-1 h-[3px] bg-white/20 rounded-full overflow-hidden">
                                     <motion.div initial={false} animate={{ width: `${progressPercent}%` }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full" style={{ backgroundColor: currentCampaign.color }} />
                                 </div>
                                 <span className="text-white/70 text-[9px] font-bold tabular-nums">{Math.round(progressPercent)}%</span>
@@ -298,20 +332,25 @@ export default function FeedView({
                                     whileTap={{ scale: 0.96 }}
                                     onClick={() => setShowModal(true)}
                                     disabled={currentPledgeState !== "initiated"}
-                                    className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider text-[11px] transition-all ${currentPledgeState === "initiated" ? "text-[#1C1C1C]"
-                                            : currentPledgeState === "escrowed" ? "bg-white/15 text-white/90"
-                                                : "bg-white/10 text-white/60"
+                                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider text-[11px] transition-all border ${currentPledgeState === "initiated"
+                                        ? "bg-black/25 backdrop-blur-md"
+                                        : currentPledgeState === "escrowed"
+                                            ? "bg-white/10 text-white/90 border-white/15"
+                                            : "bg-white/8 text-white/50 border-white/10"
                                         }`}
-                                    style={currentPledgeState === "initiated" ? { backgroundColor: currentCampaign.color } : undefined}
+                                    style={currentPledgeState === "initiated" ? {
+                                        borderColor: currentCampaign.color + "80",
+                                        color: currentCampaign.color,
+                                    } : undefined}
                                 >
                                     {currentPledgeState === "initiated" ? (<><Lock size={12} /> Lock $100</>) : currentPledgeState === "escrowed" ? (<><Zap size={12} className="animate-spin" /> Securing...</>) : (<><CheckCircle2 size={12} /> Secured</>)}
                                 </motion.button>
-                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActiveSheet("squads")} className="py-2.5 px-3.5 rounded-lg bg-white/15 flex items-center gap-1 text-white/85 text-[10px] font-bold">
+                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActiveSheet("squads")} className="py-2 px-3 rounded-xl bg-white/15 flex items-center gap-1 text-white/85 text-[10px] font-bold">
                                     <Users size={12} /> {currentCampaign.squadsCount}
                                 </motion.button>
                             </div>
 
-                            <div className="flex items-center gap-1 mt-1.5">
+                            <div className="flex items-center gap-1 mt-1">
                                 <ShieldCheck size={8} className="text-[#34D399]" />
                                 <span className="text-white/55 text-[8px] font-medium uppercase tracking-wider">Escrow protected · {currentCampaign.deadline}</span>
                             </div>
