@@ -44,7 +44,8 @@ export default function Home() {
           pointerEvents: currentTab === "FEED" ? "auto" : "none",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#C8C5BC] via-[#B8B5AC] to-[#A8A59C]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-[#0A0A0A] to-[#000000]" />
+        <div className="absolute inset-0 dot-grid opacity-30" />
         <div className="absolute inset-0">
           <ErrorBoundary>
             <Suspense fallback={null}>
@@ -78,7 +79,7 @@ export default function Home() {
 
       {/* Non-feed solid background */}
       {currentTab !== "FEED" && (
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#EDEAE4] to-[#E0DDD6]" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#050505] to-[#111111]" />
       )}
 
       {/* VIEW LAYER */}

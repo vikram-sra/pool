@@ -39,8 +39,8 @@ export default function LifecycleTracker({ currentStage, color, compact }: Props
                                 <div
                                     className={`w-2 h-2 rounded-full transition-all duration-300 ${isCurrent ? "scale-125" : ""}`}
                                     style={{
-                                        backgroundColor: isActive ? color : "#D4D2CD",
-                                        boxShadow: isCurrent ? `0 0 8px ${color}, 0 0 16px ${color}40` : "none",
+                                        backgroundColor: isActive ? color : "rgba(255,255,255,0.2)",
+                                        boxShadow: isCurrent ? `0 0 8px ${color}, 0 0 16px ${color}80` : "none",
                                     }}
                                 />
                                 {isCurrent && (
@@ -55,7 +55,7 @@ export default function LifecycleTracker({ currentStage, color, compact }: Props
                             {i < LIFECYCLE_STAGES.length - 1 && (
                                 <div
                                     className="w-2.5 h-[1.5px] rounded-full transition-colors"
-                                    style={{ backgroundColor: i < currentIdx ? color : "#D4D2CD" }}
+                                    style={{ backgroundColor: i < currentIdx ? color : "rgba(255,255,255,0.15)" }}
                                 />
                             )}
                         </div>
@@ -90,26 +90,26 @@ export default function LifecycleTracker({ currentStage, color, compact }: Props
                                     />
                                 )}
                                 <div
-                                    className={`relative w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isCurrent
-                                            ? "border-[#1C1C1C] shadow-lg scale-110"
-                                            : isActive
-                                                ? "border-[#1C1C1C]/60"
-                                                : "border-[#D4D2CD]"
+                                    className={`relative w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-300 ${isCurrent
+                                        ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110"
+                                        : isActive
+                                            ? "border-white/60"
+                                            : "border-white/20 glass-dark"
                                         }`}
                                     style={{
                                         backgroundColor: isActive ? color : "transparent",
-                                        boxShadow: isCurrent ? `0 4px 15px ${color}40` : undefined,
+                                        boxShadow: isCurrent ? `0 4px 15px ${color}70` : undefined,
                                     }}
                                 >
                                     <Icon
                                         size={14}
-                                        className={`transition-colors ${isActive ? "text-[#1C1C1C]" : "text-[#D4D2CD]"}`}
+                                        className={`transition-colors ${isActive ? "text-black" : "text-white/40"}`}
                                         strokeWidth={isCurrent ? 3 : 2}
                                     />
                                 </div>
                             </div>
                             <span
-                                className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${isCurrent ? "text-[#1C1C1C]" : isActive ? "text-[#1C1C1C]/60" : "text-[#1C1C1C]/25"
+                                className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${isCurrent ? "text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" : isActive ? "text-white/70" : "text-white/30"
                                     }`}
                             >
                                 {LIFECYCLE_LABELS[stage]}
@@ -118,7 +118,7 @@ export default function LifecycleTracker({ currentStage, color, compact }: Props
                         {i < LIFECYCLE_STAGES.length - 1 && (
                             <div className="flex-1 mx-1.5 relative">
                                 {/* Background track */}
-                                <div className="h-[2px] bg-[#D4D2CD] rounded-full" />
+                                <div className="h-[2px] bg-white/10 rounded-full" />
                                 {/* Active fill */}
                                 <motion.div
                                     initial={{ scaleX: 0 }}

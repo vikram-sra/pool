@@ -28,7 +28,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
     const handleVariantSelect = (variantId: string) => {
         setSelectedVariant(variantId);
         setUserVote(variantId);
-        try { const v = JSON.parse(localStorage.getItem('dp-votes') ?? '{}'); v[campaign.id] = variantId; localStorage.setItem('dp-votes', JSON.stringify(v)); } catch {}
+        try { const v = JSON.parse(localStorage.getItem('dp-votes') ?? '{}'); v[campaign.id] = variantId; localStorage.setItem('dp-votes', JSON.stringify(v)); } catch { }
     };
     const getVotes = (v: Variant) => v.votes + (userVote === v.id ? 1 : 0);
 
@@ -39,7 +39,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-[#1C1C1C]/40 backdrop-blur-2xl z-[100] flex items-end md:items-center justify-center pointer-events-auto"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-3xl z-[100] flex items-end md:items-center justify-center pointer-events-auto"
                     onClick={onClose}
                 >
                     <motion.div
@@ -48,44 +48,44 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                         exit={{ y: "100%", scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full md:w-[520px] max-h-[90vh] glass rounded-t-3xl md:rounded-3xl overflow-hidden shadow-[0_-10px_60px_rgba(0,0,0,0.2)]"
+                        className="w-full md:w-[520px] max-h-[90vh] glass-heavy rounded-t-3xl md:rounded-3xl border border-white/10 overflow-hidden shadow-[0_-10px_60px_rgba(0,0,0,0.8)]"
                     >
                         {/* Drag handle */}
                         <div className="flex justify-center pt-3 md:hidden">
-                            <div className="w-10 h-1 bg-[#1C1C1C]/15 rounded-full" />
+                            <div className="w-10 h-1.5 bg-white/20 rounded-full" />
                         </div>
 
                         {/* Header */}
-                        <div className="p-4 md:p-6 flex justify-between items-start border-b border-[#1C1C1C]/5">
+                        <div className="p-4 md:p-6 flex justify-between items-start border-b border-white/5">
                             <div>
-                                <div className="text-[9px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-1">Secure Pledge</div>
-                                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-[#1C1C1C]">{campaign.title}</h2>
-                                <p className="text-[10px] font-semibold text-[#1C1C1C]/50 mt-0.5">by {campaign.brand}</p>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Secure Pledge</div>
+                                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white drop-shadow-[0_0_10px_currentColor]" style={{ color: campaign.color }}>{campaign.title}</h2>
+                                <p className="text-[10px] font-bold text-white/50 mt-0.5 tracking-wider font-mono">by {campaign.brand}</p>
                             </div>
-                            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-[#1C1C1C] text-white flex items-center justify-center hover:bg-[#1C1C1C]/80 transition-colors">
-                                <X size={18} strokeWidth={3} />
+                            <button onClick={onClose} className="w-9 h-9 rounded-xl glass-dark border border-white/10 text-white/70 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors">
+                                <X size={18} strokeWidth={2.5} />
                             </button>
                         </div>
 
                         <div className="overflow-y-auto max-h-[calc(90vh-120px)] no-scrollbar px-4 md:px-6 pb-safe space-y-5">
                             {/* Lifecycle */}
-                            <div className="glass rounded-xl p-4 border border-[#1C1C1C]/5">
-                                <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-3">Campaign Stage</div>
+                            <div className="glass-dark rounded-xl p-5 border border-white/5 shadow-inner">
+                                <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-4">Campaign Stage</div>
                                 <LifecycleTracker currentStage={campaign.lifecycle} color={campaign.color} />
                             </div>
 
                             {/* Progress */}
-                            <div className="glass rounded-xl p-4 border border-[#1C1C1C]/5">
-                                <div className="flex justify-between text-[11px] font-black uppercase mb-2 text-[#1C1C1C]/70">
-                                    <span>${campaign.pledged.toLocaleString()}</span>
-                                    <span className="text-[#1C1C1C]/35">Goal ${campaign.goal.toLocaleString()}</span>
+                            <div className="glass-dark rounded-xl p-5 border border-white/5 shadow-inner">
+                                <div className="flex justify-between text-[11px] font-black uppercase mb-3 text-white/80">
+                                    <span className="text-[var(--neon-cyan)] drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]">${campaign.pledged.toLocaleString()}</span>
+                                    <span className="text-white/40">Goal ${campaign.goal.toLocaleString()}</span>
                                 </div>
-                                <div className="w-full h-2.5 bg-[#1C1C1C]/5 rounded-full overflow-hidden">
-                                    <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(progress, 100)}%` }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full relative overflow-hidden" style={{ backgroundColor: campaign.color }}>
+                                <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                    <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(progress, 100)}%` }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full relative overflow-hidden shadow-[0_0_10px_currentColor]" style={{ backgroundColor: campaign.color, color: campaign.color }}>
                                         <div className="absolute inset-0 shimmer" />
                                     </motion.div>
                                 </div>
-                                <div className="flex justify-between mt-1.5 text-[8px] font-bold text-[#1C1C1C]/30 uppercase">
+                                <div className="flex justify-between mt-2.5 text-[8px] font-bold text-white/40 uppercase tracking-widest font-mono">
                                     <span>{Math.round(progress)}% funded</span>
                                     <span>{campaign.deadline} left</span>
                                 </div>
@@ -94,10 +94,10 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                             {/* Variant Voting */}
                             {campaign.variants && campaign.variants.length > 0 && (
                                 <div>
-                                    <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-2.5">
+                                    <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-3">
                                         Vote: {campaign.variants[0].type === 'color' ? 'Colorway' : campaign.variants[0].type === 'material' ? 'Material' : 'Size'}
                                     </div>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-3 gap-2.5">
                                         {campaign.variants.map((variant: Variant) => {
                                             const totalVotes = campaign.variants!.reduce((a, v) => a + getVotes(v), 0);
                                             const pct = Math.round((getVotes(variant) / totalVotes) * 100);
@@ -108,19 +108,19 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                                     key={variant.id}
                                                     onClick={() => handleVariantSelect(variant.id)}
                                                     whileTap={{ scale: 0.95 }}
-                                                    className={`relative rounded-xl p-3 transition-all duration-200 ${isSelected ? "glass border-2 border-[#1C1C1C]/30 shadow-md" : "bg-white/30 border border-[#1C1C1C]/5 hover:bg-white/50"
+                                                    className={`relative rounded-xl p-3 transition-all duration-200 border ${isSelected ? "glass border-[var(--neon-cyan)] shadow-[0_0_15px_rgba(0,229,255,0.2)]" : "glass-dark border-white/5 hover:border-white/20"
                                                         }`}
                                                 >
                                                     {variant.hex && (
-                                                        <div className="w-full h-8 mb-2 rounded-lg border border-[#1C1C1C]/5" style={{ backgroundColor: variant.hex }} />
+                                                        <div className="w-full h-8 mb-3 rounded-lg border border-white/10 shadow-[0_0_8px_currentColor]" style={{ backgroundColor: variant.hex, color: variant.hex }} />
                                                     )}
-                                                    <div className="text-[9px] font-black uppercase tracking-wide text-[#1C1C1C] flex items-center gap-1">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center justify-center gap-1.5">
                                                         {variant.label}
-                                                        {isVoted && <CheckCircle2 size={8} className="text-[#34D399]" />}
+                                                        {isVoted && <CheckCircle2 size={10} className="text-[var(--electric-green)] drop-shadow-[0_0_5px_var(--electric-green)]" />}
                                                     </div>
-                                                    <div className="text-[7px] font-bold text-[#1C1C1C]/30 uppercase mt-0.5">{getVotes(variant).toLocaleString()} · {pct}%</div>
-                                                    <div className="w-full h-1 bg-[#1C1C1C]/5 mt-2 rounded-full overflow-hidden">
-                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full rounded-full" style={{ backgroundColor: variant.hex || campaign.color }} />
+                                                    <div className="text-[8px] font-bold text-white/40 uppercase mt-1 font-mono tracking-widest">{getVotes(variant).toLocaleString()} · <span className="text-[var(--neon-cyan)]">{pct}%</span></div>
+                                                    <div className="w-full h-1.5 bg-white/5 mt-2.5 rounded-full overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: variant.hex || campaign.color, color: variant.hex || campaign.color }} />
                                                     </div>
                                                 </motion.button>
                                             );
@@ -131,22 +131,22 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
 
                             {/* Squad Selection */}
                             <div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-2.5 flex items-center gap-1"><Users size={9} />Squad</div>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-1.5"><Users size={10} />Squad</div>
                                 <div className="flex flex-col gap-2">
                                     {campaign.squads.map((sq) => (
                                         <motion.button
                                             key={sq.name}
                                             onClick={() => setSelectedSquad(selectedSquad === sq.name ? null : sq.name)}
                                             whileTap={{ scale: 0.98 }}
-                                            className={`flex justify-between items-center p-3 rounded-xl transition-all duration-200 ${selectedSquad === sq.name ? "glass border border-[#1C1C1C]/20 shadow-sm" : "bg-white/30 border border-[#1C1C1C]/5 hover:bg-white/50"
+                                            className={`flex justify-between items-center p-3.5 rounded-xl transition-all duration-200 border ${selectedSquad === sq.name ? "glass border-[var(--neon-cyan)] shadow-[0_0_15px_rgba(0,229,255,0.2)]" : "glass-dark border-white/5 hover:border-white/20"
                                                 }`}
                                         >
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: campaign.color }} />
-                                                <span className="text-[11px] font-black uppercase">{sq.name}</span>
-                                                {sq.members && <span className="text-[8px] font-bold text-[#1C1C1C]/25">{sq.members}</span>}
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-3.5 h-3.5 rounded-[4px] shadow-[0_0_8px_currentColor]" style={{ backgroundColor: campaign.color, color: campaign.color }} />
+                                                <span className="text-[11px] font-bold uppercase tracking-widest text-white">{sq.name}</span>
+                                                {sq.members && <span className="text-[9px] font-bold text-white/30 font-mono tracking-widest">{sq.members}</span>}
                                             </div>
-                                            <span className="text-[11px] font-black text-[#1C1C1C]/40">{sq.amount}</span>
+                                            <span className="text-[11px] font-bold text-[var(--neon-cyan)] font-mono">{sq.amount}</span>
                                         </motion.button>
                                     ))}
                                 </div>
@@ -154,16 +154,16 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
 
                             {/* Amount */}
                             <div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/35 mb-2.5">Amount</div>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-3">Amount</div>
+                                <div className="grid grid-cols-4 gap-2.5">
                                     {AMOUNTS.map((amt) => (
                                         <motion.button
                                             key={amt}
                                             onClick={() => setSelectedAmount(amt)}
                                             whileTap={{ scale: 0.95 }}
-                                            className={`py-3 rounded-xl font-black text-sm transition-all duration-200 ${selectedAmount === amt
-                                                    ? "bg-[#1C1C1C] text-white shadow-md"
-                                                    : "bg-white/30 text-[#1C1C1C] border border-[#1C1C1C]/5 hover:bg-white/50"
+                                            className={`py-3.5 rounded-xl font-bold font-mono tracking-widest text-sm transition-all duration-200 border ${selectedAmount === amt
+                                                ? "glass bg-white text-black border-transparent shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                                : "glass-dark text-white/70 border-white/5 hover:border-white/20 hover:text-white"
                                                 }`}
                                         >
                                             ${amt}
@@ -185,17 +185,16 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
 
                             {/* CTA */}
                             <motion.button
-                                whileHover={pledgeState === "initiated" ? { scale: 1.02, y: -1 } : {}}
+                                whileHover={pledgeState === "initiated" ? { scale: 1.02, y: -2 } : {}}
                                 whileTap={pledgeState === "initiated" ? { scale: 0.98 } : {}}
                                 onClick={() => onPledge(campaign.id)}
                                 disabled={pledgeState !== "initiated"}
-                                className={`w-full py-4 rounded-xl font-black uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-all duration-300 ${pledgeState === "initiated"
-                                        ? "bg-[#1C1C1C] text-white shadow-[0_4px_20px_rgba(28,28,28,0.3)] hover:shadow-[0_6px_30px_rgba(28,28,28,0.4)]"
-                                        : pledgeState === "escrowed"
-                                            ? "bg-[#1C1C1C] text-white"
-                                            : "bg-white/40 text-[#1C1C1C]"
+                                className={`w-full py-4.5 rounded-xl font-black uppercase tracking-widest text-[12px] flex items-center justify-center gap-2 transition-all duration-300 border ${pledgeState === "initiated"
+                                    ? "bg-[var(--electric-green)] text-black border-transparent shadow-[0_0_25px_rgba(0,255,102,0.4)] hover:shadow-[0_0_35px_rgba(0,255,102,0.6)]"
+                                    : pledgeState === "escrowed"
+                                        ? "glass bg-white text-black border-transparent"
+                                        : "glass-dark border-[var(--electric-green)] text-[var(--electric-green)] shadow-[0_0_15px_rgba(0,255,102,0.2)]"
                                     }`}
-                                style={pledgeState === "locked" ? { backgroundColor: campaign.color + "15" } : undefined}
                             >
                                 <AnimatePresence mode="popLayout">
                                     <motion.div key={pledgeState} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} className="flex items-center gap-2">

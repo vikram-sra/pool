@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import ShapeModel from "./ShapeModel";
 import { CAMPAIGNS } from "@/data/campaigns";
@@ -105,12 +105,12 @@ export default function ThreeScene({ currentCampaign, currentIndex, onInteractio
 
     return (
         <>
-            {/* Programmatic studio rig — no external HDR fetch, zero PMREM cost */}
-            <ambientLight intensity={1.5} />
-            <directionalLight position={[5, 10, 5]} intensity={2.5} color={currentCampaign.color} castShadow={false} />
-            <directionalLight position={[-5, 5, -5]} intensity={1.5} color="#ffffff" />
-            <directionalLight position={[0, -5, 5]} intensity={0.8} color="#e8f0ff" />
-            <pointLight position={[3, 3, 3]} intensity={1.0} color="#ffffff" decay={2} />
+            {/* Programmatic studio rig for Cyberpunk/Futuristic aesthetic */}
+            <ambientLight intensity={0.4} />
+            <directionalLight position={[5, 10, 5]} intensity={4.0} color={currentCampaign.color} castShadow={false} />
+            <directionalLight position={[-5, 5, -5]} intensity={2.5} color="#00E5FF" />
+            <directionalLight position={[0, -5, 5]} intensity={1.2} color="#FF00FF" />
+            <pointLight position={[3, 3, 3]} intensity={1.5} color="#ffffff" decay={2} />
 
             {/* Only render models within render window for performance */}
             {CAMPAIGNS.map((campaign: Campaign, i: number) => {
@@ -132,7 +132,8 @@ export default function ThreeScene({ currentCampaign, currentIndex, onInteractio
                 );
             })}
 
-            {/* Environment removed — use programmatic lights only to avoid HDR fetch on init */}
+            {/* Restored Environment to fix metallic objects rendering pitch black */}
+            <Environment preset="city" environmentIntensity={0.5} />
 
             <OrbitControls
                 ref={controlsRef}
