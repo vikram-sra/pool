@@ -75,38 +75,19 @@ export default function ThreeScene({ currentCampaign, currentIndex, onInteractio
         if (controlsRef.current) controlsRef.current.reset();
     }, [currentIndex]);
 
-    // Zoom interceptor: allow pinch-to-zoom only, not scroll-to-zoom
+    // Zoom: block regular scroll-wheel zoom, allow pinch (mobile + trackpad)
     useEffect(() => {
         const el = gl.domElement;
         if (!el) return;
 
-        const handleWheelCapture = (e: WheelEvent) => {
-            if (controlsRef.current) {
-                controlsRef.current.enableZoom = e.ctrlKey; // ctrlKey = trackpad pinch
-            }
+        const handleWheel = (e: WheelEvent) => {
+            // ctrl+wheel = trackpad pinch → let OrbitControls handle it
+            // regular wheel = scroll → block it from reaching OrbitControls
+            if (!e.ctrlKey) e.stopImmediatePropagation();
         };
 
-        const handleTouchStart = (e: TouchEvent) => {
-            if (controlsRef.current && e.touches.length > 1) {
-                controlsRef.current.enableZoom = true;
-            }
-        };
-
-        const handleTouchEnd = (e: TouchEvent) => {
-            if (controlsRef.current && e.touches.length < 2) {
-                controlsRef.current.enableZoom = false;
-            }
-        };
-
-        el.addEventListener("wheel", handleWheelCapture, { capture: true });
-        el.addEventListener("touchstart", handleTouchStart, { passive: true });
-        el.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-        return () => {
-            el.removeEventListener("wheel", handleWheelCapture, { capture: true });
-            el.removeEventListener("touchstart", handleTouchStart);
-            el.removeEventListener("touchend", handleTouchEnd);
-        };
+        el.addEventListener("wheel", handleWheel, { capture: true });
+        return () => el.removeEventListener("wheel", handleWheel, { capture: true });
     }, [gl]);
 
     return (

@@ -14,7 +14,17 @@ export default function TrendsView() {
     const [activeTrendTab, setActiveTrendTab] = useState<"PLEDGING" | "VOTING" | "SUBMITTING">("PLEDGING");
     const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-    const filteredCampaigns = activeCategory === "ALL" ? CAMPAIGNS : CAMPAIGNS.filter((c) => c.category === activeCategory);
+    const TREND_STAGES: Record<string, string[]> = {
+        PLEDGING: ["SPARK", "PLEDGE"],
+        VOTING: ["LOCKED"],
+        SUBMITTING: ["GREENLIGHT", "PRODUCTION"],
+    };
+    const filteredCampaigns = CAMPAIGNS.filter((c) => {
+        const catMatch = activeCategory === "ALL" || c.category === activeCategory;
+        const stageMatch = TREND_STAGES[activeTrendTab]?.includes(c.lifecycle) ?? true;
+        return catMatch && stageMatch;
+    });
+    const tabCount = (tab: string) => CAMPAIGNS.filter((c) => (TREND_STAGES[tab] ?? []).includes(c.lifecycle)).length;
 
     // ── CAMPAIGN DETAIL ──
     if (selectedCampaign) {
@@ -150,9 +160,9 @@ export default function TrendsView() {
                             {/* Sub-tabs */}
                             <div className="grid grid-cols-3 gap-2">
                                 {([
-                                    { id: "PLEDGING" as const, icon: <Zap size={14} />, count: "128 Active" },
-                                    { id: "VOTING" as const, icon: <Target size={14} />, count: "45 Staging" },
-                                    { id: "SUBMITTING" as const, icon: <Edit3 size={14} />, count: "812 Ideas" },
+                                    { id: "PLEDGING" as const, icon: <Zap size={14} />, count: `${tabCount("PLEDGING")} Active` },
+                                    { id: "VOTING" as const, icon: <Target size={14} />, count: `${tabCount("VOTING")} Staging` },
+                                    { id: "SUBMITTING" as const, icon: <Edit3 size={14} />, count: `${tabCount("SUBMITTING")} Ready` },
                                 ]).map((tab) => (
                                     <button key={tab.id} onClick={() => setActiveTrendTab(tab.id)} className={`p-3 md:p-4 rounded-xl border transition-all duration-200 flex flex-col items-center gap-1.5 text-center ${activeTrendTab === tab.id
                                         ? "glass-dark text-white border-white/10 shadow-md"

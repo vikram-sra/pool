@@ -97,14 +97,14 @@ export default function Home() {
 
       {/* PITCH SHEET */}
       <AnimatePresence>
-        {showPitch && <PitchSheet onClose={() => setShowPitch(false)} />}
+        {showPitch && <PitchSheet onClose={() => setShowPitch(false)} initialBrand={BRANDS.find(b => currentCampaign.brand.toLowerCase().startsWith(b.name.toLowerCase()))?.name} />}
       </AnimatePresence>
     </div>
   );
 }
 
-function PitchSheet({ onClose }: { onClose: () => void }) {
-  const [selectedBrand, setSelectedBrand] = useState("");
+function PitchSheet({ onClose, initialBrand }: { onClose: () => void; initialBrand?: string }) {
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand ?? "");
   const [pitchText, setPitchText] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 

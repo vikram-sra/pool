@@ -20,7 +20,17 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
     const [selectedAmount, setSelectedAmount] = useState(100);
     const [selectedVariant, setSelectedVariant] = useState<string | null>(campaign.variants?.[0]?.id ?? null);
     const [selectedSquad, setSelectedSquad] = useState<string | null>(campaign.squads[0]?.name ?? null);
+    const [userVote, setUserVote] = useState<string | null>(() => {
+        try { const v = JSON.parse(localStorage.getItem('dp-votes') ?? '{}'); return v[campaign.id] ?? null; } catch { return null; }
+    });
     const progress = (campaign.pledged / campaign.goal) * 100;
+
+    const handleVariantSelect = (variantId: string) => {
+        setSelectedVariant(variantId);
+        setUserVote(variantId);
+        try { const v = JSON.parse(localStorage.getItem('dp-votes') ?? '{}'); v[campaign.id] = variantId; localStorage.setItem('dp-votes', JSON.stringify(v)); } catch {}
+    };
+    const getVotes = (v: Variant) => v.votes + (userVote === v.id ? 1 : 0);
 
     return (
         <AnimatePresence>
@@ -89,13 +99,14 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                     </div>
                                     <div className="grid grid-cols-3 gap-2">
                                         {campaign.variants.map((variant: Variant) => {
-                                            const totalVotes = campaign.variants!.reduce((a, v) => a + v.votes, 0);
-                                            const pct = Math.round((variant.votes / totalVotes) * 100);
+                                            const totalVotes = campaign.variants!.reduce((a, v) => a + getVotes(v), 0);
+                                            const pct = Math.round((getVotes(variant) / totalVotes) * 100);
                                             const isSelected = selectedVariant === variant.id;
+                                            const isVoted = userVote === variant.id;
                                             return (
                                                 <motion.button
                                                     key={variant.id}
-                                                    onClick={() => setSelectedVariant(variant.id)}
+                                                    onClick={() => handleVariantSelect(variant.id)}
                                                     whileTap={{ scale: 0.95 }}
                                                     className={`relative rounded-xl p-3 transition-all duration-200 ${isSelected ? "glass border-2 border-[#1C1C1C]/30 shadow-md" : "bg-white/30 border border-[#1C1C1C]/5 hover:bg-white/50"
                                                         }`}
@@ -103,8 +114,11 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                                     {variant.hex && (
                                                         <div className="w-full h-8 mb-2 rounded-lg border border-[#1C1C1C]/5" style={{ backgroundColor: variant.hex }} />
                                                     )}
-                                                    <div className="text-[9px] font-black uppercase tracking-wide text-[#1C1C1C]">{variant.label}</div>
-                                                    <div className="text-[7px] font-bold text-[#1C1C1C]/30 uppercase mt-0.5">{variant.votes.toLocaleString()} · {pct}%</div>
+                                                    <div className="text-[9px] font-black uppercase tracking-wide text-[#1C1C1C] flex items-center gap-1">
+                                                        {variant.label}
+                                                        {isVoted && <CheckCircle2 size={8} className="text-[#34D399]" />}
+                                                    </div>
+                                                    <div className="text-[7px] font-bold text-[#1C1C1C]/30 uppercase mt-0.5">{getVotes(variant).toLocaleString()} · {pct}%</div>
                                                     <div className="w-full h-1 bg-[#1C1C1C]/5 mt-2 rounded-full overflow-hidden">
                                                         <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full rounded-full" style={{ backgroundColor: variant.hex || campaign.color }} />
                                                     </div>

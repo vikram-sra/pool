@@ -1,5 +1,6 @@
 // ── Scroll & Gesture Thresholds ──
-export const SCROLL_COOLDOWN_MS = 800;
+export const SCROLL_COOLDOWN_MS = 400;
+export const SWIPE_COOLDOWN_MS = 200;
 export const SWIPE_DISTANCE_THRESHOLD = 120;
 export const SWIPE_VELOCITY_THRESHOLD = 0.5;
 export const SWIPE_MIN_DISTANCE = 40;
