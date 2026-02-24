@@ -1,7 +1,7 @@
 export type LifecycleStage = 'SPARK' | 'PLEDGE' | 'LOCKED' | 'GREENLIGHT' | 'PRODUCTION';
 export type PledgeState = 'initiated' | 'escrowed' | 'locked';
 export type Category = 'TECH' | 'APPAREL' | 'HOME' | 'RESTAURANTS' | 'LOCAL';
-export type TabId = 'FEED' | 'TRENDS' | 'BRANDS' | 'PROFILE';
+export type TabId = 'FEED' | 'TRENDS' | 'BRANDS' | 'PROFILE' | 'PITCH';
 
 export interface Squad {
     name: string;

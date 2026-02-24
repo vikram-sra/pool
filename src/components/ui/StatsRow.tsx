@@ -44,27 +44,27 @@ export default function StatsRow() {
                 >
                     {/* Hover glow */}
                     <div
-                        className="absolute -inset-1 rounded-xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500"
+                        className="absolute -inset-1.5 rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
                         style={{ backgroundColor: stat.color }}
                     />
 
-                    <div className={`relative glass border-2 border-[#1C1C1C]/10 rounded-xl p-4 md:p-5 overflow-hidden group-hover:border-[#1C1C1C]/20 transition-all duration-300`}>
+                    <div className={`relative glass-dark border border-white/5 rounded-2xl p-4 md:p-5 overflow-hidden group-hover:border-white/20 shadow-[0_8px_25px_rgba(0,0,0,0.5)] transition-all duration-300`}>
                         {/* Gradient accent */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-60`} />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-40`} />
 
                         {/* Accent line */}
-                        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ backgroundColor: stat.color }} />
+                        <div className="absolute top-0 left-0 right-0 h-1 shadow-[0_0_10px_currentColor]" style={{ backgroundColor: stat.color, color: stat.color }} />
 
                         <div className="relative">
-                            <div className="flex items-center gap-1.5 mb-2">
-                                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ backgroundColor: stat.color + '15' }}>
-                                    <stat.icon size={12} style={{ color: stat.color }} />
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-lg glass flex items-center justify-center border border-white/5 shadow-[0_0_10px_currentColor]" style={{ backgroundColor: stat.color + '10', color: stat.color }}>
+                                    <stat.icon size={14} style={{ color: stat.color }} className="drop-shadow-[0_0_5px_currentColor]" />
                                 </div>
-                                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#1C1C1C]/40">
+                                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white/50">
                                     {stat.label}
                                 </span>
                             </div>
-                            <div className="text-2xl md:text-3xl font-black text-[#1C1C1C]">
+                            <div className="text-3xl md:text-4xl font-black text-white font-mono drop-shadow-[0_0_10px_currentColor]" style={{ color: stat.color }}>
                                 <AnimatedCounter target={stat.target} prefix={stat.prefix} suffix={stat.unit} />
                             </div>
                         </div>

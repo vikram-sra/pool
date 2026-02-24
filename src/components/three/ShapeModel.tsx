@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import {
@@ -15,16 +15,64 @@ import {
 // Pre-allocate reusable Vector3 to avoid GC pressure in useFrame
 const _tempVec = new THREE.Vector3();
 
+// ── Module-level singleton textures ─────────────────────────────────────────
+// Created once and shared across ALL ShapeModel instances to avoid GPU memory
+// blow-up (previously we were creating new textures per instance × per render
+// window, which caused WebGL context loss on lower-end GPUs).
+// Guards for SSR: typeof document check.
+
+function makeBrushedTex(): THREE.CanvasTexture | null {
+    if (typeof document === "undefined") return null;
+    const c = document.createElement("canvas");
+    c.width = 256; c.height = 256; // 256 is plenty for a roughness map
+    const ctx = c.getContext("2d")!;
+    for (let y = 0; y < 256; y++) {
+        const v = 90 + Math.random() * 80;
+        ctx.fillStyle = `rgb(${v},${v},${v})`;
+        ctx.fillRect(0, y, 256, 1);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(3, 3);
+    return t;
+}
+
+function makeMatteTex(): THREE.CanvasTexture | null {
+    if (typeof document === "undefined") return null;
+    const c = document.createElement("canvas");
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext("2d")!;
+    const img = ctx.createImageData(128, 128);
+    for (let i = 0; i < img.data.length; i += 4) {
+        const v = 100 + Math.random() * 80;
+        img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+        img.data[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(4, 4);
+    return t;
+}
+
+// Lazy singletons — created on first model mount, then reused
+let _brushedTex: THREE.CanvasTexture | null = null;
+let _matteTex: THREE.CanvasTexture | null = null;
+
+function getBrushedTex() { return (_brushedTex ??= makeBrushedTex()); }
+function getMatteTex() { return (_matteTex ??= makeMatteTex()); }
+
 interface ShapeModelProps {
     type: string;
     color: string;
     index: number;
     currentIndex: number;
+    dragProgressRef: React.MutableRefObject<number>;
     onPointerDown: () => void;
     onToggleZen: () => void;
 }
 
-export default function ShapeModel({ type, color, index, currentIndex, onPointerDown, onToggleZen }: ShapeModelProps) {
+export default function ShapeModel({ type, color, index, currentIndex, dragProgressRef, onPointerDown, onToggleZen }: ShapeModelProps) {
     const groupRef = useRef<THREE.Group>(null);
     const time = useRef(Math.random() * 100);
     const pointerMoved = useRef(false);
@@ -39,7 +87,10 @@ export default function ShapeModel({ type, color, index, currentIndex, onPointer
             groupRef.current.rotation.y = time.current * 0.2;
         }
 
-        const targetY = (currentIndex - index) * MODEL_Y_SPREAD;
+        // dragProgressRef.current is positive when dragging up (toward next item).
+        // Adding it to targetY shifts all models up, revealing the next item below.
+        const targetY = (currentIndex - index) * MODEL_Y_SPREAD
+            + dragProgressRef.current * MODEL_Y_SPREAD;
         groupRef.current.position.y = THREE.MathUtils.lerp(
             groupRef.current.position.y,
             targetY + Math.sin(time.current * 2) * 0.1,
@@ -55,21 +106,35 @@ export default function ShapeModel({ type, color, index, currentIndex, onPointer
     const isChrome = type === "shell" || type === "camera" || type === "watch" || type === "suitcase";
     const isBrushedMetal = type === "walkman" || type === "synth" || type === "espresso" || type === "keyboard" || type === "drone";
     const isTransparent = type === "earbuds" || type === "speaker";
+    const isMatte = !isChrome && !isBrushedMetal && !isTransparent;
+
+    // Use shared singleton textures — no per-instance allocation
+    const brushedTex = isBrushedMetal ? getBrushedTex() : null;
+    const matteTex = isMatte ? getMatteTex() : null;
 
     const mat = (
-        <meshPhysicalMaterial
-            color={isChrome ? "#FFFFFF" : color}
-            roughness={isChrome ? 0.05 : isBrushedMetal ? 0.35 : 0.8}
+        <meshStandardMaterial
+            color={isChrome ? "#E8E8E8" : color}
+            roughness={isChrome ? 0.05 : isBrushedMetal ? 0.35 : 0.75}
             metalness={isChrome ? 1 : isBrushedMetal ? 0.9 : 0.1}
-            clearcoat={isChrome ? 1 : 0.2}
-            transmission={isTransparent ? 0.7 : 0}
-            thickness={isTransparent ? 1 : 0}
-            ior={1.5}
+            roughnessMap={isBrushedMetal ? brushedTex : isMatte ? matteTex : null}
+            transparent={isTransparent}
+            opacity={isTransparent ? 0.55 : 1}
+            envMapIntensity={isChrome ? 2 : isBrushedMetal ? 1.0 : 0.4}
         />
     );
 
     const accentMat = <meshStandardMaterial color="#1C1C1C" roughness={0.2} metalness={0.8} />;
-    const glassMat = <meshPhysicalMaterial transmission={1} thickness={0.5} roughness={0.05} ior={1.5} color="#FFFFFF" />;
+    // Cheap frosted glass — simple transparency
+    const glassMat = (
+        <meshStandardMaterial
+            transparent
+            opacity={0.25}
+            roughness={0.06}
+            metalness={0.1}
+            color="#FFFFFF"
+        />
+    );
 
     const handlePointerDown = (e: THREE.Event) => {
         (e as any).stopPropagation();

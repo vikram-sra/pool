@@ -9,21 +9,26 @@ interface Props {
 
 interface State {
     hasError: boolean;
+    retryKey: number;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = { hasError: false };
+        this.state = { hasError: false, retryKey: 0 };
     }
 
-    static getDerivedStateFromError(): State {
+    static getDerivedStateFromError(): Partial<State> {
         return { hasError: true };
     }
 
     componentDidCatch(error: Error, info: React.ErrorInfo) {
         console.error("[ErrorBoundary] 3D render error:", error, info);
     }
+
+    handleRetry = () => {
+        this.setState(prev => ({ hasError: false, retryKey: prev.retryKey + 1 }));
+    };
 
     render() {
         if (this.state.hasError) {
@@ -38,7 +43,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                                 3D Engine Unavailable
                             </p>
                             <button
-                                onClick={() => this.setState({ hasError: false })}
+                                onClick={this.handleRetry}
                                 className="px-6 py-2 bg-[#1C1C1C] text-white text-xs font-black uppercase tracking-widest"
                             >
                                 Retry
@@ -49,6 +54,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
             );
         }
 
-        return this.props.children;
+        return (
+            <React.Fragment key={this.state.retryKey}>
+                {this.props.children}
+            </React.Fragment>
+        );
     }
 }

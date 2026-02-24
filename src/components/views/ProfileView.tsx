@@ -10,7 +10,7 @@ export default function ProfileView() {
     const user = USER_PROFILE;
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto no-scrollbar bg-[#F5F4F0] dot-grid pt-safe pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto no-scrollbar bg-transparent dot-grid pt-safe pointer-events-auto">
             <div className="max-w-4xl mx-auto p-5 md:p-10 pb-32">
                 {!isEditing ? (
                     <div className="space-y-8">
