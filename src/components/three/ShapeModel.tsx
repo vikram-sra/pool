@@ -69,8 +69,8 @@ const MODEL_FIT: Record<string, number> = {
 interface ShapeModelProps {
     type: string;
     color: string;
-    onPointerDown: () => void;
-    onToggleZen: () => void;
+    onPointerDown?: () => void;
+    onToggleZen?: () => void;
 }
 
 export default function ShapeModel({ type, color, onPointerDown, onToggleZen }: ShapeModelProps) {
@@ -121,12 +121,12 @@ export default function ShapeModel({ type, color, onPointerDown, onToggleZen }: 
     const handlePointerDown = (e: THREE.Event) => {
         (e as any).stopPropagation();
         pointerMoved.current = false;
-        onPointerDown();
+        if (onPointerDown) onPointerDown();
     };
     const handlePointerMove = () => { pointerMoved.current = true; };
     const handleClick = (e: THREE.Event) => {
         (e as any).stopPropagation();
-        if (!pointerMoved.current) onToggleZen();
+        if (!pointerMoved.current && onToggleZen) onToggleZen();
     };
     const props = { onPointerDown: handlePointerDown, onPointerMove: handlePointerMove, onClick: handleClick };
 

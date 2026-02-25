@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronLeft, Send, Flame, Zap, CheckCircle2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Send, Flame, Zap, CheckCircle2, Target } from "lucide-react";
 import { BRANDS } from "@/data/campaigns";
 
 // ── Mock extracted pitches (top-5 per brand, pre-voted) ─────────────────────
@@ -10,6 +10,7 @@ interface ExtractedPitch {
     id: string;
     brandName: string;
     brandHue: string;
+    brandLogo?: string;
     title: string;
     summary: string;
     voteCount: number;
@@ -18,11 +19,11 @@ interface ExtractedPitch {
 }
 
 const MOCK_PITCHES: ExtractedPitch[] = [
-    { id: "p1", brandName: "Nike", brandHue: "#34D399", title: "Jordan 1 Olive Retro", summary: "Bring back the 1985 Olive colorway of the Jordan 1 High in modern materials. Full grain leather, OG box.", voteCount: 4120, threshold: 5000, userVoted: false },
+    { id: "p1", brandName: "Nike", brandHue: "#FF6B2C", brandLogo: "/brands/nike_logo_1772059075484.png", title: "Jordan 1 Olive Retro", summary: "Bring back the 1985 Olive colorway of the Jordan 1 High in modern materials. Full grain leather, OG box.", voteCount: 4120, threshold: 5000, userVoted: false },
     { id: "p2", brandName: "Sony", brandHue: "#38BDF8", title: "Discman Revival DAP", summary: "Modern hi-res audio DAP in a Discman shell. CD slot is now a 3.5\" OLED display showing waveforms.", voteCount: 3980, threshold: 4000, userVoted: false },
     { id: "p3", brandName: "Leica", brandHue: "#FBBF24", title: "M-Zero Digital", summary: "A digital M-mount body with a single button — no menus, no screen. Exposure by eye. Like a digital film camera.", voteCount: 2870, threshold: 4000, userVoted: false },
-    { id: "p4", brandName: "Nike", brandHue: "#34D399", title: "ACG Gaiter Boot V2", summary: "Update the original ACG gaiter boot with trail-ready outsole and recycled upper. Modular gaiters.", voteCount: 2210, threshold: 5000, userVoted: false },
-    { id: "p5", brandName: "Dyson", brandHue: "#C084FC", title: "Pure Air Backpack", summary: "Wearable air purifier built into a 20L daypack. Real-time AQI display + filtration for commuters.", voteCount: 1940, threshold: 3000, userVoted: false },
+    { id: "p4", brandName: "Dyson", brandHue: "#C084FC", brandLogo: "/brands/dyson_logo_1772059346895.png", title: "Pure Air Backpack", summary: "Wearable air purifier built into a 20L daypack. Real-time AQI display + filtration for commuters.", voteCount: 1940, threshold: 3000, userVoted: false },
+    { id: "p5", brandName: "Teenage Eng", brandHue: "#111111", brandLogo: "/brands/teenage_eng_logo_1772059155534.png", title: "OP-XY Modular Synth", summary: "A modular, snap-together series of synths that magnetically click like lego blocks to form a master sequencer.", voteCount: 1240, threshold: 2000, userVoted: false },
 ];
 
 // ── Mock brand prompts ───────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ function getSeedPitches(brand: string): string[] {
 type Screen = "landing" | "pad" | "detail";
 
 export default function PitchView() {
-    const [subTab, setSubTab] = useState<"vote" | "pitch">("vote");
+    const [subTab, setSubTab] = useState<"vote" | "pitch">("pitch");
     const [screen, setScreen] = useState<Screen>("landing");
     const [selectedBrand, setSelectedBrand] = useState<string>("");
     const [showDropdown, setShowDropdown] = useState(false);
@@ -114,7 +115,7 @@ export default function PitchView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-[#F5F4F0] flex flex-col overflow-hidden pointer-events-auto"
+            className="absolute inset-0 bg-gray-50 flex flex-col overflow-hidden pointer-events-auto z-10"
         >
             <AnimatePresence mode="wait">
                 {screen === "landing" && (
@@ -170,27 +171,23 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.25 }}
-            className="flex flex-col h-full"
+            className="flex flex-col h-full max-w-lg mx-auto w-full border-x border-gray-100 bg-white"
         >
             {/* Header */}
-            <div className="px-4 pt-12 pb-3">
-                <h1 className="text-[22px] font-black uppercase tracking-tighter text-[#1C1C1C]">Pitch</h1>
-                <p className="text-[10px] text-[#1C1C1C]/40 font-medium mt-0.5">Tell brands what to make next</p>
-            </div>
-
-            {/* Sub-tab toggle */}
-            <div className="px-4 mb-4">
-                <div className="flex bg-[#1C1C1C]/5 rounded-xl p-1 gap-1">
+            <div className="px-6 pt-12 pb-4 border-b border-gray-100 bg-white z-10">
+                <h1 className="text-3xl font-black uppercase tracking-tighter text-gray-900 mb-1">Pitch</h1>
+                <p className="text-xs font-semibold text-gray-400">Tell brands what to make next.</p>
+                <div className="flex bg-gray-100 rounded-xl p-1 gap-1 border border-gray-200 shadow-inner mt-6">
                     {(["vote", "pitch"] as const).map(t => (
                         <button
                             key={t}
                             onClick={() => setSubTab(t)}
-                            className={`flex-1 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 ${subTab === t
-                                ? "bg-[#1C1C1C] text-white shadow-sm"
-                                : "text-[#1C1C1C]/40"
+                            className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${subTab === t
+                                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                                : "text-gray-400 hover:text-gray-600"
                                 }`}
                         >
-                            {t === "vote" ? "🗳 Vote" : "💡 Pitch"}
+                            {t === "vote" ? "🗳 Community Votes" : "💡 Pitch an Idea"}
                         </button>
                     ))}
                 </div>
@@ -198,8 +195,8 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
 
             <AnimatePresence mode="wait">
                 {subTab === "vote" ? (
-                    <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar px-4 pb-nav space-y-3">
-                        <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-3">Top Pitches This Week</div>
+                    <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar px-6 pt-6 pb-[120px] bg-gray-50 flex flex-col gap-4">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Top Pitches This Week</div>
                         {pitches.sort((a, b) => b.voteCount - a.voteCount).map((p, i) => {
                             const pct = Math.min((p.voteCount / p.threshold) * 100, 100);
                             const hot = pct >= 80;
@@ -210,39 +207,48 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.05 }}
                                     onClick={() => onVoteDetail(p)}
-                                    className="w-full text-left bg-white rounded-2xl p-4 border border-[#1C1C1C]/5 active:scale-[0.98] transition-transform"
+                                    className="w-full text-left bg-white rounded-2xl p-5 border border-gray-200 active:scale-[0.98] transition-all hover:shadow-md hover:border-gray-300 group"
                                 >
-                                    <div className="flex items-start gap-3">
-                                        {/* Rank */}
-                                        <div className="text-[11px] font-black text-[#1C1C1C]/20 w-4 shrink-0 pt-0.5">
-                                            {String(i + 1).padStart(2, "0")}
-                                        </div>
+                                    <div className="flex items-start gap-4">
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 mb-0.5">
-                                                <div className="w-3.5 h-3.5 rounded-sm flex items-center justify-center text-[7px] font-black text-white shrink-0" style={{ backgroundColor: p.brandHue }}>
-                                                    {p.brandName[0]}
-                                                </div>
-                                                <span className="text-[8px] font-bold text-[#1C1C1C]/30 uppercase tracking-wider">{p.brandName}</span>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                {p.brandLogo ? (
+                                                    <img src={p.brandLogo} alt={p.brandName} className="h-4 object-contain mix-blend-multiply opacity-60 group-hover:opacity-100 transition-opacity" />
+                                                ) : (
+                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black text-white shrink-0" style={{ backgroundColor: p.brandHue }}>
+                                                        {p.brandName[0]}
+                                                    </div>
+                                                )}
+                                                {!p.brandLogo && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{p.brandName}</span>}
                                                 {hot && (
-                                                    <span className="ml-auto flex items-center gap-0.5 bg-[#FF3D00]/10 text-[#FF3D00] text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full">
-                                                        <Flame size={7} /> Almost Greenlit
+                                                    <span className="ml-auto flex items-center gap-1 bg-red-50 text-red-600 border border-red-100 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md">
+                                                        <Flame size={10} /> Hot
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="font-black text-[13px] text-[#1C1C1C] leading-tight mb-2">{p.title}</div>
-                                            {/* Vertical-style progress bar */}
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 h-1.5 bg-[#1C1C1C]/6 rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${pct}%` }}
-                                                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.06 }}
-                                                        className="h-full rounded-full"
-                                                        style={{ backgroundColor: hot ? "#FF3D00" : p.brandHue }}
-                                                    />
+                                            <div className="font-black text-lg text-gray-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors">{p.title}</div>
+                                            <p className="text-xs text-gray-500 font-medium line-clamp-2 mb-4 leading-relaxed">{p.summary}</p>
+
+                                            {/* Segmented HUD progress bar */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 flex gap-[2px] h-[6px]">
+                                                    {Array.from({ length: 15 }).map((_, idx) => {
+                                                        const threshold = (idx / 15) * 100;
+                                                        const isFilled = pct >= threshold;
+                                                        return (
+                                                            <motion.div
+                                                                key={idx}
+                                                                initial={{ opacity: 0 }}
+                                                                animate={{ opacity: isFilled ? 1 : 0.15 }}
+                                                                transition={{ duration: 0.3, delay: (i * 0.05) + (idx * 0.02) }}
+                                                                className="h-full flex-1 rounded-[1px]"
+                                                                style={{ backgroundColor: isFilled ? (hot ? "#DC2626" : "#111") : "#9CA3AF" }}
+                                                            />
+                                                        )
+                                                    })}
                                                 </div>
-                                                <span className="text-[8px] font-bold tabular-nums text-[#1C1C1C]/30">
-                                                    {p.voteCount.toLocaleString()} <span className="text-[#1C1C1C]/15">/ {p.threshold.toLocaleString()}</span>
+                                                <span className="text-[10px] font-mono font-bold tracking-widest tabular-nums text-gray-900">
+                                                    {Math.round(pct)}%
                                                 </span>
                                             </div>
                                         </div>
@@ -252,43 +258,51 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                         })}
                     </motion.div>
                 ) : (
-                    <motion.div key="pitch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 px-4 pb-nav space-y-5">
-                        <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-3">Select a brand & add your idea to the pool</div>
+                    <motion.div key="pitch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 px-4 md:px-6 pt-6 pb-[120px] bg-[#F9FAFB] flex flex-col gap-6">
 
-                        {/* Brand selector */}
-                        <div>
-                            <label className="block text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/30 mb-1.5">Brand</label>
+                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                                    <Target size={12} />
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Target Brand</div>
+                            </div>
+
+                            {/* Brand selector */}
                             <div className="relative">
                                 <button
                                     onClick={() => setShowDropdown(!showDropdown)}
-                                    className="w-full flex items-center justify-between bg-white rounded-xl border border-[#1C1C1C]/10 p-3.5 text-left"
+                                    className="w-full flex items-center justify-between bg-gray-50 rounded-2xl border border-gray-200 p-4 text-left shadow-inner hover:bg-gray-100 transition-colors group"
                                 >
-                                    <span className={`text-sm font-semibold ${selectedBrand ? "text-[#1C1C1C]" : "text-[#1C1C1C]/25"}`}>
+                                    <span className={`text-sm font-black ${selectedBrand ? "text-gray-900" : "text-gray-400"}`}>
                                         {selectedBrand || "Choose a brand to pitch to..."}
                                     </span>
-                                    <ChevronDown size={16} className={`text-[#1C1C1C]/30 transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
+                                    <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${showDropdown ? "rotate-180" : "group-hover:text-gray-600"}`} />
                                 </button>
                                 <AnimatePresence>
                                     {showDropdown && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -4 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -4 }}
+                                            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -4, scale: 0.98 }}
                                             transition={{ duration: 0.15 }}
-                                            className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-[#1C1C1C]/10 shadow-xl z-20 max-h-52 overflow-y-auto no-scrollbar"
+                                            className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] z-30 max-h-64 overflow-y-auto no-scrollbar"
                                         >
                                             {BRANDS.map(b => (
                                                 <button
                                                     key={b.name}
                                                     onClick={() => { setSelectedBrand(b.name); setShowDropdown(false); }}
-                                                    className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-[#1C1C1C]/3 transition-colors border-b border-[#1C1C1C]/4 last:border-0"
+                                                    className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
                                                 >
-                                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-white shrink-0" style={{ backgroundColor: b.hue }}>
-                                                        {b.name[0]}
+                                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center p-2 bg-white border border-gray-100 shrink-0 shadow-sm">
+                                                        {b.brandLogo ? (
+                                                            <img src={b.brandLogo} alt={b.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                                        ) : (
+                                                            <span className="text-sm font-black text-gray-900">{b.name[0]}</span>
+                                                        )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <div className="text-[12px] font-black text-[#1C1C1C]">{b.name}</div>
-                                                        <div className="text-[8px] text-[#1C1C1C]/30 truncate">{b.description ?? `${b.campaigns} campaigns`}</div>
+                                                        <div className="text-sm font-black text-gray-900">{b.name}</div>
                                                     </div>
                                                 </button>
                                             ))}
@@ -302,13 +316,16 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                         <AnimatePresence>
                             {selectedBrand && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="bg-white rounded-xl border border-[#1C1C1C]/8 p-3.5"
+                                    initial={{ opacity: 0, y: 8, height: 0 }}
+                                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="bg-white rounded-3xl border border-blue-100 p-6 mt-2 shadow-[0_2px_15px_rgba(59,130,246,0.05)] overflow-hidden"
                                 >
-                                    <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-1">Their Question</div>
-                                    <p className="text-[12px] font-semibold text-[#1C1C1C] leading-snug italic">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                        <div className="text-[9px] font-black uppercase tracking-widest text-blue-600">Official Brand Request</div>
+                                    </div>
+                                    <p className="text-sm md:text-base font-bold text-gray-900 leading-relaxed italic">
                                         "{BRAND_PROMPTS[selectedBrand] ?? "What product have you always wanted from us?"}"
                                     </p>
                                 </motion.div>
@@ -320,9 +337,9 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                             whileTap={{ scale: 0.97 }}
                             disabled={!selectedBrand}
                             onClick={() => onGoPad(selectedBrand)}
-                            className="w-full py-4 bg-[#1C1C1C] text-white rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                            className="w-full py-5 mt-4 bg-black text-white rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 shadow-md disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none transition-all"
                         >
-                            <Zap size={14} /> Open Pitch Pad
+                            <Zap size={16} /> Open Pitch Stream
                         </motion.button>
                     </motion.div>
                 )}
@@ -339,7 +356,6 @@ function PitchPad({ brand, onBack }: { brand: string; onBack: () => void }) {
     const [submitted, setSubmitted] = useState(false);
     const streamRef = useRef<HTMLDivElement>(null);
 
-    // Simulate other users pitching every 4–8 seconds
     useEffect(() => {
         const seeds = getSeedPitches(brand);
         let idx = 0;
@@ -352,7 +368,6 @@ function PitchPad({ brand, onBack }: { brand: string; onBack: () => void }) {
         return () => clearInterval(interval);
     }, [brand]);
 
-    // Auto-scroll stream to bottom on new pitch
     useEffect(() => {
         if (streamRef.current) {
             streamRef.current.scrollTop = streamRef.current.scrollHeight;
@@ -375,96 +390,104 @@ function PitchPad({ brand, onBack }: { brand: string; onBack: () => void }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="flex flex-col h-full"
+            className="flex flex-col h-full max-w-lg mx-auto w-full border-x border-gray-100 bg-gray-50"
         >
             {/* Header */}
-            <div className="px-4 pt-12 pb-3 flex items-center gap-3 border-b border-[#1C1C1C]/5">
-                <button onClick={onBack} className="w-8 h-8 rounded-full bg-[#1C1C1C]/5 flex items-center justify-center">
-                    <ChevronLeft size={18} className="text-[#1C1C1C]/60" />
+            <div className="px-5 pt-12 pb-4 flex items-center gap-4 bg-white border-b border-gray-100 z-10 shrink-0 shadow-sm">
+                <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center border border-gray-200 transition-colors">
+                    <ChevronLeft size={20} className="text-gray-600" />
                 </button>
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
                     {brand_ && (
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-white shrink-0" style={{ backgroundColor: brand_.hue }}>
-                            {brand_?.name[0]}
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 p-1.5 flex items-center justify-center shrink-0">
+                            {brand_.brandLogo ? (
+                                <img src={brand_.brandLogo} alt={brand_.name} className="w-full h-full object-contain mix-blend-multiply" />
+                            ) : (
+                                <span className="text-sm font-black text-gray-900">{brand_.name[0]}</span>
+                            )}
                         </div>
                     )}
                     <div className="min-w-0">
-                        <div className="font-black text-[13px] text-[#1C1C1C] uppercase tracking-tight">{brand} Pitch Pad</div>
-                        <div className="text-[8px] text-[#1C1C1C]/30 font-medium">{stream.length} ideas in the pool</div>
+                        <div className="font-black text-sm text-gray-900 uppercase tracking-tight">{brand} Stream</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{stream.length} Pitches Live</div>
                     </div>
                 </div>
             </div>
 
             {/* Brand prompt */}
-            <div className="mx-4 mt-3 mb-2 bg-white rounded-xl border border-[#1C1C1C]/8 p-3.5">
-                <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-1">
-                    {brand} Asks
+            <div className="px-6 py-4 bg-blue-50 border-b border-blue-100 shrink-0">
+                <div className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-1">
+                    Live Prompt
                 </div>
-                <p className="text-[12px] font-semibold text-[#1C1C1C] leading-snug italic">
+                <p className="text-sm font-bold text-gray-900 leading-snug italic">
                     "{BRAND_PROMPTS[brand] ?? "What product have you always wanted from us?"}"
                 </p>
             </div>
 
             {/* The communal pitch stream */}
-            <div className="mx-4 mb-2 flex-1 min-h-0 overflow-hidden relative">
-                <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/20 mb-1.5">The Pool — {stream.length} pitches</div>
+            <div className="flex-1 min-h-0 relative bg-gray-50/50">
                 <div
                     ref={streamRef}
-                    className="h-full overflow-y-auto no-scrollbar bg-white rounded-xl border border-[#1C1C1C]/5 p-3"
+                    className="absolute inset-0 overflow-y-auto no-scrollbar p-5 pb-32"
                 >
-                    {stream.map((text, i) => (
-                        <motion.span
-                            key={i}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.4 }}
-                            className={`text-[11px] leading-relaxed font-medium ${i === stream.length - 1 && submitted
-                                ? "text-[#1C1C1C] bg-[#34D399]/10 rounded px-0.5"
-                                : "text-[#1C1C1C]/60"
-                                }`}
-                        >
-                            {text}
-                            {i < stream.length - 1 ? " · " : ""}
-                        </motion.span>
-                    ))}
+                    {stream.map((text, i) => {
+                        const isMine = i === stream.length - 1 && submitted;
+                        return (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                className={`mb-5 max-w-[90%] p-5 rounded-3xl border shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative ${isMine
+                                    ? "bg-gray-900 border-gray-800 text-white ml-auto rounded-br-sm shadow-md"
+                                    : "bg-white border-gray-100 text-gray-900 hover:border-gray-300 transition-all rounded-bl-sm"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-black tracking-widest ${isMine ? "bg-white text-black" : "bg-blue-50 text-blue-600"}`}>
+                                        {isMine ? "ME" : "UI"}
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase tracking-widest ${isMine ? "text-gray-400" : "text-gray-400"}`}>
+                                        {isMine ? "Just now" : "Live Stream"}
+                                    </span>
+                                </div>
+                                <p className={`text-[13px] font-semibold leading-relaxed ${isMine ? "text-gray-100" : "text-gray-700"}`}>{text}</p>
+                            </motion.div>
+                        )
+                    })}
                 </div>
-                {/* Fade top edge */}
-                <div className="absolute top-5 left-0 right-0 h-6 bg-gradient-to-b from-[#F5F4F0] to-transparent pointer-events-none rounded-t-xl" />
+                {/* Top fade gradient */}
+                <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" />
             </div>
 
             {/* Sticky input bar */}
-            <div className="px-4 pb-nav pt-2 border-t border-[#1C1C1C]/5 bg-[#F5F4F0]">
-                <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/20 mb-1.5">Add your idea</div>
-                <div className="flex gap-2">
-                    <textarea
+            <div className="absolute bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-xl border-t border-gray-200 pb-[calc(env(safe-area-inset-bottom)+90px)]">
+                <div className="flex gap-3 relative max-w-lg mx-auto">
+                    <input
                         value={inputText}
                         onChange={e => setInputText(e.target.value.slice(0, 280))}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                        placeholder="What would you want them to make?"
-                        rows={2}
-                        className="flex-1 bg-white rounded-xl border border-[#1C1C1C]/10 px-3 py-2.5 text-[11px] font-medium text-[#1C1C1C] placeholder-[#1C1C1C]/15 outline-none focus:border-[#1C1C1C]/20 resize-none leading-relaxed"
+                        placeholder="Add your concept..."
+                        className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 px-5 py-4 text-sm font-bold text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all shadow-inner"
                     />
                     <motion.button
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={handleSubmit}
                         disabled={!inputText.trim()}
-                        className="w-11 rounded-xl bg-[#1C1C1C] flex items-center justify-center disabled:opacity-20 shrink-0"
+                        className="w-14 rounded-2xl bg-black flex items-center justify-center disabled:opacity-30 disabled:bg-gray-400 shrink-0 shadow-sm"
                     >
                         <AnimatePresence mode="wait">
                             {submitted ? (
                                 <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                    <CheckCircle2 size={16} className="text-[#34D399]" />
+                                    <CheckCircle2 size={20} className="text-white" />
                                 </motion.div>
                             ) : (
                                 <motion.div key="send" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                    <Send size={14} className="text-white" />
+                                    <Send size={18} className="text-white ml-1" />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </motion.button>
-                </div>
-                <div className="text-right mt-1">
-                    <span className="text-[7px] text-[#1C1C1C]/15 font-medium">{inputText.length}/280</span>
                 </div>
             </div>
         </motion.div>
@@ -483,85 +506,86 @@ function VoteDetail({ pitch, onBack, onVote }: { pitch: ExtractedPitch; onBack: 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
             transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="flex flex-col h-full"
+            className="flex flex-col h-full max-w-lg mx-auto w-full border-x border-gray-100 bg-gray-50"
         >
-            <div className="px-4 pt-12 pb-3 flex items-center gap-3 border-b border-[#1C1C1C]/5">
-                <button onClick={onBack} className="w-8 h-8 rounded-full bg-[#1C1C1C]/5 flex items-center justify-center">
-                    <ChevronLeft size={18} className="text-[#1C1C1C]/60" />
+            <div className="px-5 pt-12 pb-4 flex items-center gap-4 bg-white border-b border-gray-100">
+                <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center border border-gray-200 transition-colors">
+                    <ChevronLeft size={20} className="text-gray-600" />
                 </button>
-                <span className="font-black text-[13px] text-[#1C1C1C] uppercase tracking-tight">Vote</span>
+                <span className="font-black text-sm text-gray-900 uppercase tracking-tight">Inspect Pitch</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar px-4 pt-4 pb-nav space-y-4">
-                {/* Brand + urgency */}
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black text-white" style={{ backgroundColor: pitch.brandHue }}>
-                        {pitch.brandName[0]}
-                    </div>
-                    <div>
-                        <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/30">{pitch.brandName}</div>
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 bg-gray-50 pb-[120px] space-y-6">
+
+                <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
+                    {/* Brand + urgency */}
+                    <div className="flex items-center justify-between mb-5">
+                        <div className="flex items-center gap-3 shadow-sm border border-gray-100 rounded-xl px-3 py-1.5 object-contain bg-gray-50">
+                            {pitch.brandLogo ? (
+                                <img src={pitch.brandLogo} alt={pitch.brandName} className="h-5 mix-blend-multiply" />
+                            ) : (
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-600">{pitch.brandName}</span>
+                            )}
+                        </div>
                         {hot && (
-                            <div className="flex items-center gap-0.5 text-[8px] font-black text-[#FF3D00]">
-                                <Flame size={8} /> Almost Greenlit
+                            <div className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-100 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl">
+                                <Flame size={12} /> Almost Greenlit
                             </div>
                         )}
                     </div>
-                </div>
 
-                {/* Title */}
-                <h2 className="text-[22px] font-black uppercase tracking-tighter text-[#1C1C1C] leading-tight">{pitch.title}</h2>
+                    {/* Title */}
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 leading-tight mb-5">{pitch.title}</h2>
 
-                {/* Full pitch */}
-                <div className="bg-white rounded-2xl border border-[#1C1C1C]/5 p-4">
-                    <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-2">Community Brief</div>
-                    <p className="text-[13px] text-[#1C1C1C]/70 leading-relaxed font-medium">{pitch.summary}</p>
+                    {/* Full pitch */}
+                    <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">Community Brief</div>
+                        <p className="text-sm text-gray-700 leading-relaxed font-semibold">{pitch.summary}</p>
+                    </div>
                 </div>
 
                 {/* Progress */}
-                <div className="bg-white rounded-2xl border border-[#1C1C1C]/5 p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/25">Votes toward Greenlight</span>
-                        <span className="text-[11px] font-black tabular-nums" style={{ color: hot ? "#FF3D00" : pitch.brandHue }}>
+                <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
+                    <div className="flex justify-between items-end mb-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Votes to Greenlight</span>
+                        <span className="text-xl font-black tabular-nums text-gray-900">
                             {Math.round(pct)}%
                         </span>
                     </div>
-                    <div className="h-2 bg-[#1C1C1C]/5 rounded-full overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${pct}%` }}
-                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                            className="h-full rounded-full"
-                            style={{ backgroundColor: hot ? "#FF3D00" : pitch.brandHue }}
-                        />
+                    <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden mb-5">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full bg-black rounded-full" />
                     </div>
-                    <div className="flex justify-between text-[7px] text-[#1C1C1C]/20 font-medium">
+                    <div className="flex justify-between text-[11px] font-mono tracking-widest font-bold text-gray-400">
                         <span>{pitch.voteCount.toLocaleString()} votes</span>
-                        <span>{pitch.threshold.toLocaleString()} to Greenlight</span>
+                        <span>{pitch.threshold.toLocaleString()} needed</span>
                     </div>
                 </div>
 
                 {/* Vote button */}
-                <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onVote}
-                    disabled={pitch.userVoted}
-                    className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-[12px] flex items-center justify-center gap-2 transition-all"
-                    style={{
-                        backgroundColor: pitch.userVoted ? "rgba(28,28,28,0.05)" : pitch.brandHue,
-                        color: pitch.userVoted ? "rgba(28,28,28,0.3)" : "#fff",
-                    }}
-                >
-                    {pitch.userVoted ? (
-                        <><CheckCircle2 size={15} /> Voted</>
-                    ) : (
-                        <>Vote For This</>
-                    )}
-                </motion.button>
+                <div className="mt-8">
+                    <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={onVote}
+                        disabled={pitch.userVoted}
+                        className="w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all shadow-md active:shadow-none"
+                        style={{
+                            backgroundColor: pitch.userVoted ? "#F3F4F6" : "#111",
+                            color: pitch.userVoted ? "#9CA3AF" : "#fff",
+                            border: pitch.userVoted ? "1px solid #E5E7EB" : "1px solid #000"
+                        }}
+                    >
+                        {pitch.userVoted ? (
+                            <><CheckCircle2 size={18} /> Voted ✅</>
+                        ) : (
+                            <>Vote For This Concept</>
+                        )}
+                    </motion.button>
 
-                <p className="text-[8px] text-center text-[#1C1C1C]/20 font-medium leading-relaxed px-4">
-                    1 vote per pitch per user. Votes are public and anonymous.
-                    When a pitch hits its threshold it advances to a brand pledge campaign.
-                </p>
+                    <p className="text-[10px] text-center text-gray-400 font-semibold leading-relaxed px-6 mt-6 uppercase tracking-widest">
+                        1 vote per pitch. Votes are public.
+                        Threshold met = advance to official pledge campaign.
+                    </p>
+                </div>
             </div>
         </motion.div>
     );

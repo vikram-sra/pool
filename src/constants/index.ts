@@ -1,6 +1,6 @@
 // ── Scroll & Gesture Thresholds ──
-export const SCROLL_COOLDOWN_MS = 350;
-export const SWIPE_COOLDOWN_MS = 250;
+export const SCROLL_COOLDOWN_MS = 800;
+export const SWIPE_COOLDOWN_MS = 600;
 export const SWIPE_DISTANCE_THRESHOLD = 80;
 export const SWIPE_VELOCITY_THRESHOLD = 0.4;
 export const SWIPE_MIN_DISTANCE = 40;
@@ -17,10 +17,12 @@ export const ORBIT_MAX_DISTANCE = 10;
 export const ORBIT_DAMPING = 0.15;
 
 // ── Lifecycle ──
-export const LIFECYCLE_STAGES = ['SPARK', 'PLEDGE', 'LOCKED', 'GREENLIGHT', 'PRODUCTION'] as const;
+export const LIFECYCLE_STAGES = ['SPARK', 'REVIEW', 'VOTING', 'FUNDING', 'LOCKED', 'GREENLIGHT', 'PRODUCTION'] as const;
 export const LIFECYCLE_LABELS: Record<string, string> = {
     SPARK: 'Spark',
-    PLEDGE: 'Pledging',
+    REVIEW: 'AI Review',
+    VOTING: 'Voting',
+    FUNDING: 'Funding',
     LOCKED: 'Locked',
     GREENLIGHT: 'Greenlight',
     PRODUCTION: 'Production',
