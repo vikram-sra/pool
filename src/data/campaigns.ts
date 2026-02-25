@@ -5,6 +5,8 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 1,
         brand: 'Nike Verified',
+        iconPath: 'M24 7.8L6.442 15.276c-1.456.616-2.679.925-3.668.925-1.12 0-1.933-.392-2.437-1.177-.317-.504-.41-1.143-.28-1.918.13-.775.476-1.6 1.036-2.478.467-.71 1.232-1.643 2.297-2.8a6.122 6.122 0 00-.784 1.848c-.28 1.195-.028 2.072.756 2.632.373.261.886.392 1.54.392.522 0 1.11-.084 1.764-.252L24 7.8z',
+        iconHex: '#111111',
         title: 'RETRO 95 NEON',
         description: 'Pledge to resurrect the highly demanded Neon \'95 colorway. If we hit the goal, it goes straight to production. Zero risk to you.',
         goal: 25000,
@@ -15,7 +17,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '12 DAYS',
         squadsCount: '4.2k',
         category: 'APPAREL',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 1240,
         specs: ['Air Max Cushioning', 'Mesh Upper', 'Neon Accents', 'Retro 1995 Box'],
         squads: [{ name: 'Sneakerheads', amount: '+$4.2k', members: 820 }, { name: 'The 90s Club', amount: '+$2.8k', members: 420 }],
@@ -29,6 +31,8 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 2,
         brand: 'Sony Verified',
+        iconPath: 'M8.5505 9.8881c.921 0 1.6574.2303 2.2209.7423.3848.3485.5999.8454.5939 1.3665a1.9081 1.9081 0 0 1-.5939 1.3726c-.5272.4848-1.3483.7423-2.221.7423-.8725 0-1.6785-.2575-2.2148-.7423-.3908-.3485-.609-.8484-.603-1.3726 0-.518.2182-1.015.603-1.3665.5-.4545 1.3847-.7423 2.2149-.7423zm.003 3.6692c.4606 0 .8878-.1606 1.1878-.4575.2999-.2999.4332-.6605.4332-1.1029 0-.4242-.1484-.821-.4333-1.1029-.2938-.2908-.7332-.4545-1.1877-.4545s-.8938.1637-1.1907.4545c-.2848.2818-.4333.6787-.4333 1.103-.006.409.1485.806.4333 1.1029.2969.2939.7332.4575 1.1907.4575zm-4.8418-1.9665c.1605.0424.315.094.4666.1636a1.352 1.352 0 0 1 .3787.2576c.197.206.309.4817.306.7665a.9643.9643 0 0 1-.3787.7788 2.0662 2.0662 0 0 1-.709.3485 3.7231 3.7231 0 0 1-1.1938.1697c-.352 0-.5467-.0406-.8138-.0962l-.077-.016c-.294-.0666-.5817-.1575-.8575-.2787a.0695.0695 0 0 0-.0424-.0121c-.0454 0-.0818.0394-.0818.0848v.203H.1212v-1.4786h.5242a.7559.7559 0 0 0 .1363.418c.2121.2607.4394.3607.6575.4395.3666.1212.7514.1848 1.1362.1969.5526 0 .8756-.134.9455-.163l.009-.0037.0062-.0023c.0616-.0226.3119-.1143.3119-.3916 0-.2743-.2338-.334-.387-.373l-.022-.0058c-.1708-.046-.562-.0872-.9897-.1323l-.1526-.016c-.4848-.0515-.9696-.1273-1.1968-.1758-.4977-.1097-.6942-.2917-.816-.4045l-.0082-.0076A1.0192 1.0192 0 0 1 0 11.1608c0-.497.3394-.797.7575-.9817.4454-.2.9756-.288 1.4392-.288.8211.0031 1.4877.2697 1.727.394.097.0515.1455-.0121.1455-.0606v-.1484h.5272v1.2876h-.4727a.9056.9056 0 0 0-.2939-.4909 1.289 1.289 0 0 0-.297-.1787c-.3968-.1667-.821-.2515-1.2513-.2455-.4423 0-.8665.085-1.0786.2153-.1333.0818-.2.1848-.2.306 0 .1727.1454.2424.2182.2636.1967.0597.6328.103.972.1369.0736.0073.1426.0142.2036.0206.3272.0334 1.012.1243 1.315.2zm18.1673-.9966v-.4787H24v.4696h-.4757c-.1727 0-.2424.0334-.3727.1788l-1.4271 1.63a.098.098 0 0 0-.0182.0698v.7423a1.106 1.106 0 0 0 .0121.103.1496.1496 0 0 0 .1.0909.9368.9368 0 0 0 .1303.009h.4848v.4698h-2.5724v-.4697h.4606a.9343.9343 0 0 0 .1302-.0091.1627.1627 0 0 0 .1031-.091.5626.5626 0 0 0 .009-.1v-.7422c0-.0242 0-.0242-.0333-.0636a606.7592 606.7592 0 0 0-1.4119-1.6028c-.0758-.0788-.2061-.2061-.406-.2061h-.4576v-.4696h2.5876v.4696h-.3121c-.0697 0-.1182.0697-.0576.1455 0 0 .8696 1.0392.8787 1.0513.0091.0122.0152.0122.0273.003.0121-.009.8938-1.0453.8999-1.0543a.0912.0912 0 0 0-.0182-.1273.1095.1095 0 0 0-.0606-.0182zm-6.284-.0031h.4848c.2212 0 .2606.0848.2636.2909l.0273 1.5664-2.5815-2.324H11.944v.4697h.412c.297 0 .3182.1636.3182.309v2.2138c.0004.1285.0009.295-.1818.295h-.506v.4667h2.1634v-.4697h-.5273c-.212 0-.2211-.097-.2242-.303v-1.8816l2.9724 2.6511h.7575l-.0394-2.9966c.003-.218.0182-.2908.2424-.2908h.4726v-.4697H15.595Z',
+        iconHex: '#000000',
         title: 'WALKMAN CYBER',
         description: 'A modern, high-res audio DAP packaged inside the exact tooling of the original 1980s Walkman TPS-L2. Bluetooth 5.3 included.',
         goal: 150000,
@@ -52,6 +56,8 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 3,
         brand: 'Leica Verified',
+        iconPath: 'M9.42 10.954c.198.011.35.146.343.29-.033.94-1.19.795-1.19.795s.17-1.126.846-1.085zm9.313 2.064c.794 0 .952-1.605.952-1.64a.41.41 0 0 0-.423-.398c-.66 0-.9 1.203-.9 1.508 0 .116.007.53.37.53zm-9.949-5.08c.036-.318-.12-.662-.555-.662-1.06 0-1.509 2.963-1.509 2.963s1.853-.438 2.064-2.301zm-6.244 5.82c-.207.021-.423.114-.423.344 0 .139.235.382.608.37.49-.014 1.085-.475 1.085-.475s-.506-.207-1.085-.239a1.026 1.026 0 0 0-.185 0zM24 12.003C24 18.628 18.627 24 12 24 5.37 24 0 18.628 0 12.003 0 5.374 5.371 0 12 0c6.627 0 12 5.374 12 12.003zM11.933 9.446c0 .446.377.555.794.555.418 0 .82-.18.82-.635 0-.456-.48-.555-.82-.555-.471 0-.794.193-.794.635zM9.366 10.53c-1.41 0-2.407.866-2.407 1.904 0 .948.808 1.35 1.852 1.35 1.184 0 2.354-.714 2.354-.714s.071.714 1.006.714c.964 0 1.72-.714 1.72-.714s.417.687 1.376.687c.98 0 1.72-.793 1.72-.793s.272.74 1.243.74c.759 0 1.164-.476 1.164-.476s.212.477.873.477c.808 0 1.402-.556 1.402-.556l-.132-.476s-.307.238-.529.238c-.168 0-.265-.137-.265-.291 0-.347.556-2.064.556-2.064l-1.35.026-.052.212s-.201-.37-.9-.37c-1.352 0-2.085 1.166-2.116 1.852-.007.149-.027.158-.027.158-.032.036-.497.583-1.085.583-.47 0-.555-.384-.555-.635 0-.273.233-1.35.873-1.35.348 0 .555.291.555.291l.186-.608s-.292-.236-.9-.238c-1.308-.001-2.19.967-2.222 1.852-.007.132-.03.176-.027.185-.043.053-.35.423-.767.423-.286 0-.291-.219-.291-.317 0-.135.555-2.064.555-2.064l-1.481.026-.503 1.879s-.826.581-1.958.661c-.584.04-.794-.32-.794-.529v-.08c.001 0 .246.027.424.027.14 0 1.878-.134 1.878-1.19 0-.605-.613-.82-1.376-.82zm12.568 3.889-.132-.476s-3.096 1.078-9.022 1.005c-4.089-.05-7.224-1.243-7.224-1.243s.119-.212.185-.344c.41-.835.9-2.514.9-2.514s2.805-.785 2.805-3.016c0-.706-.674-1.162-1.323-1.19-2.264-.089-2.877 3.128-3.017 3.677-.007.039-.026.053-.026.053-.698-.095-1.085-.238-1.085-.238l-.159.45c.471.223 1.165.29 1.165.29-.136.865-.82 2.488-.82 2.488s-.608-.186-1.376-.186c-1 0-1.35.47-1.376.768-.066.77.911 1.137 1.587 1.137 1.32 0 2.011-.714 2.011-.714s3.695 1.402 7.567 1.402c5.069 0 9.34-1.35 9.34-1.35z',
+        iconHex: '#E20612',
         title: 'GHOST EDITION',
         description: "Stripped down. No screen. Magnesium alloy. True mechanical shutter. The ultimate demanding photographer's dream.",
         goal: 500000,
@@ -70,6 +76,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 4,
         brand: 'Arcteryx Verified',
+        brandLogo: '/brands/arcteryx_logo_1772059192054.png',
         title: 'DUNE SHELL',
         description: 'An ultra-tough, unreleased concept shell built for extreme sandstorms and desert heat. Gore-Tex PRO breathable mesh.',
         goal: 80000,
@@ -93,6 +100,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 5,
         brand: 'Teenage Engineering',
+        brandLogo: '/brands/teenage_eng_logo_1772059155534.png',
         title: 'OP-3 BRUTE',
         description: 'A massive, brutalist portable synthesizer cast in pure aluminum. 16 tracks. Built-in FM radio transceiver.',
         goal: 200000,
@@ -110,6 +118,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 6,
         brand: 'Braun Verified',
+        brandLogo: 'https://logo.clearbit.com/braun.com',
         title: 'AW10 1989',
         description: 'The classic minimalist wristwatch from 1989. Exact original schematics, re-issued for a single production run.',
         goal: 40000,
@@ -128,6 +137,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 7,
         brand: 'Dyson Verified',
+        brandLogo: '/brands/dyson_logo_1772059346895.png',
         title: 'SONIC BOARD',
         description: "A proof-of-concept levitation board utilizing Dyson's unreleased cyclonic air-cushion technology. Moves seamlessly over concrete.",
         goal: 1000000,
@@ -137,7 +147,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '14 DAYS',
         squadsCount: '15k',
         category: 'TECH',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 4100,
         specs: ['Cyclonic Levitation', '1hr Battery', 'Carbon Fiber Deck', 'App Controlled'],
         squads: [{ name: 'Future Tech', amount: '+$80k', members: 2400 }, { name: 'Skaters', amount: '+$25k', members: 1700 }],
@@ -149,6 +159,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 8,
         brand: 'Nintendo Verified',
+        brandLogo: 'https://logo.clearbit.com/nintendo.com',
         title: 'SUPER FAMICOM.V2',
         description: 'An exact 1:1 machined aluminum replica of the original Super Famicom console, modernized with wireless controllers and 4K upscaling.',
         goal: 350000,
@@ -166,6 +177,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 9,
         brand: 'Herman Miller',
+        brandLogo: 'https://logo.clearbit.com/hermanmiller.com',
         title: 'AERON EXTREME',
         description: 'A completely blacked-out, carbon-weave variant of the iconic Aeron chair. Designed for marathon ergonomic performance.',
         goal: 120000,
@@ -175,7 +187,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '19 DAYS',
         squadsCount: '3.4k',
         category: 'HOME',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 420,
         specs: ['Carbon Fiber Weave', 'Vantablack Finish', 'PostureFit SL', '8-Way Adjustable'],
         squads: [{ name: 'Developers', amount: '+$24k', members: 360 }, { name: 'Writers', amount: '+$12k', members: 60 }],
@@ -183,6 +195,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 10,
         brand: 'Nothing',
+        brandLogo: 'https://logo.clearbit.com/nothing.tech',
         title: 'EAR (ZERO)',
         description: 'True wireless earbuds enclosed entirely in transparent sapphire crystal. See every micro-component powering your audio.',
         goal: 50000,
@@ -200,6 +213,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 11,
         brand: 'Keychron Verified',
+        brandLogo: 'https://logo.clearbit.com/keychron.com',
         title: 'Q1 HE CARBON',
         description: 'A Hall Effect magnetic switch keyboard with a solid forged carbon fiber chassis. 8000Hz polling rate.',
         goal: 65000,
@@ -217,6 +231,8 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 12,
         brand: 'DJI Verified',
+        iconPath: 'M19.2 7.8a716.856 716.856 0 0 0-1.232 4.63c-.202.772-.401 1.544-.634 2.308-.226.743-.504 1.535-.91 2.21-.422.703-.969 1.253-1.726 1.604-.3.137-.615.24-.939.306-.46.09-.926.146-1.394.165-1.163.065-3.628.056-4.79.056l.713-2.64c.539 0 1.078.002 1.617-.013.52-.014 1.092-.042 1.605-.163.56-.133.984-.36 1.355-.817.337-.416.564-.935.75-1.424.34-.893.688-2.173.934-3.093.277-1.041.544-2.085.812-3.129zm4.8 0-2.072 7.68h-3.84l2.073-7.68ZM11.339 4.92h3.84c-.403 1.5-.805 2.999-1.212 4.496-.283 1.044-.565 2.088-.872 3.124-.135.452-.269.903-.445 1.342-.141.352-.3.666-.591.93a1.908 1.908 0 0 1-.734.405c-.356.112-.717.154-1.085.184-.53.043-1.06.054-1.591.063-1.991.02-3.983.02-5.974-.001a21.408 21.408 0 0 1-.954-.034 5.319 5.319 0 0 1-.632-.07 1.851 1.851 0 0 1-.412-.119c-.44-.192-.664-.575-.677-1.043 0-.263.032-.525.093-.78.076-.367.171-.728.265-1.09.179-.691.506-1.966.762-2.638.2-.526.464-1.05.966-1.382.28-.186.576-.285.901-.35.241-.05.483-.075.728-.093.41-.03.82-.04 1.23-.047.582-.01 1.165-.013 1.748-.015L8.148 7.8h1.454l-.518 1.92c-.864 0-1.728-.002-2.593.003-.252.001-.504 0-.756.016a.968.968 0 0 0-.264.042c-.113.04-.17.11-.22.213-.073.15-.115.31-.162.468a84.804 84.804 0 0 0-.503 1.857c-.035.14-.07.28-.1.42-.022.099-.04.197-.05.298-.01.11-.014.242.053.345.068.103.182.127.29.143.12.018.241.021.363.025.199.006.398.007.597.008.544.003 1.089.003 1.633 0 .25-.002.501-.004.752-.014.173-.007.343-.013.513-.054.13-.031.23-.08.318-.186.056-.071.1-.15.133-.235.088-.209.15-.425.213-.641.245-.83.466-1.665.692-2.499l.675-2.503.67-2.505h3.84z',
+        iconHex: '#000000',
         title: 'AVATA PRO X',
         description: 'Cinestick-ready FPV drone with a titanium exoskeleton and 8K 60fps global shutter camera.',
         goal: 250000,
@@ -226,7 +242,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '10 DAYS',
         squadsCount: '5.4k',
         category: 'TECH',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 2400,
         specs: ['Titanium Exoskeleton', '8K Global Shutter', 'O4 Video Link', 'Crash-Proof Ducting'],
         squads: [{ name: 'FPV Pilots', amount: '+$45k', members: 1600 }, { name: 'Cinematographers', amount: '+$32k', members: 800 }],
@@ -234,6 +250,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 13,
         brand: 'La Marzocco',
+        brandLogo: 'https://logo.clearbit.com/lamarzocco.com',
         title: 'LINEA MINI-S',
         description: 'The classic cafe icon shrunk down even further. Now with dual boiler sapphire tubing and IoT flow profiling.',
         goal: 400000,
@@ -243,7 +260,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '15 DAYS',
         squadsCount: '1.8k',
         category: 'HOME',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 620,
         specs: ['Doughnut Driver Design', '98dB Sensitivity', 'Walnut Housing', 'Solid Brass Accents'],
         squads: [{ name: 'High Fidelity', amount: '+$12.5k', members: 420 }, { name: 'Craftsmanship', amount: '+$4k', members: 200 }],
@@ -252,6 +269,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 14,
         brand: 'Bang & Olufsen',
+        brandLogo: 'https://logo.clearbit.com/bang-olufsen.com',
         title: 'BEOSOUND GLASS',
         description: 'An omnidirectional speaker crafted from a single block of high-density acoustic glass. Sound you can see through.',
         goal: 150000,
@@ -269,6 +287,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 15,
         brand: 'Rimowa Verified',
+        brandLogo: 'https://logo.clearbit.com/rimowa.com',
         title: 'CABIN TITANIUM',
         description: 'The legendary aluminum pilot case, re-imagined in pure Grade 5 Titanium for the ultimate frequent flyer.',
         goal: 120000,
@@ -286,6 +305,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 16,
         brand: 'Central Perk',
+        brandLogo: 'https://logo.clearbit.com/coffeebeandirect.com',
         title: 'UPPER EAST ROAST',
         description: 'Bringing the iconic Greenwich Village coffee experience to your doorstep. Verified organic micro-lots.',
         goal: 15000,
@@ -295,7 +315,7 @@ export const CAMPAIGNS: Campaign[] = [
         deadline: '8 DAYS',
         squadsCount: '0.8k',
         category: 'RESTAURANTS',
-        lifecycle: 'PLEDGE',
+        lifecycle: 'FUNDING',
         backers: 210,
         specs: ['Single Origin', 'Compostable Cups', 'Mobile Roastery', 'Nitro Cold Brew'],
         squads: [{ name: 'Coffee Geeks', amount: '+$1.2k', members: 140 }, { name: 'Eco-Conscious', amount: '+$900', members: 70 }],
@@ -304,6 +324,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 17,
         brand: 'The Corner Bistro',
+        brandLogo: 'https://logo.clearbit.com/cornerbistro.com',
         title: 'HYPER-LOCAL CIDER',
         description: 'Small-batch, zero-additive cider brewed exclusively with apples from 10km of the city center.',
         goal: 5000,
@@ -321,6 +342,7 @@ export const CAMPAIGNS: Campaign[] = [
     {
         id: 18,
         brand: 'Main St. Barber',
+        brandLogo: 'https://logo.clearbit.com/theartofshaving.com',
         title: 'SOLID SHAVE BAR',
         description: "Ditching plastic. A high-performance shave soap bar formulated by the city's oldest barbershop.",
         goal: 2500,
@@ -339,15 +361,15 @@ export const CAMPAIGNS: Campaign[] = [
 
 // ── BRANDS ──
 export const BRANDS: Brand[] = [
-    { name: 'Nike', totalRaised: '$4.2M', campaigns: 12, hue: '#FF6B2C', joinedYear: 2019, description: 'Global athletic innovation. From concept to production with verified consumer demand.' },
-    { name: 'Sony', totalRaised: '$2.1M', campaigns: 5, hue: '#38BDF8', joinedYear: 2020, description: 'Reimagining consumer electronics through community-backed co-creation.' },
-    { name: 'Leica', totalRaised: '$8.5M', campaigns: 3, hue: '#FBBF24', joinedYear: 2021, description: 'Precision optical engineering, financed by the photographers who demand it.' },
-    { name: 'Arcteryx', totalRaised: '$1.1M', campaigns: 4, hue: '#FF3D00', joinedYear: 2022, description: 'Pushing technical outerwear boundaries via demand-verified prototyping.' },
-    { name: 'Teenage Eng', totalRaised: '$950k', campaigns: 2, hue: '#F1F5F9', joinedYear: 2023, description: 'Musical instruments and creative tools backed by the community.' },
-    { name: 'Braun', totalRaised: '$400k', campaigns: 6, hue: '#E11D48', joinedYear: 2020, description: 'Timeless design reissued through verified demand signals.' },
-    { name: 'Dyson', totalRaised: '$0', campaigns: 1, hue: '#C084FC', joinedYear: 2024, description: 'Moonshot engineering concepts validated by real consumers.' },
-    { name: 'Nintendo', totalRaised: '$1.8M', campaigns: 2, hue: '#6366F1', joinedYear: 2023, description: 'Retro gaming hardware revived through community pledges.' },
-    { name: 'Herman Miller', totalRaised: '$620k', campaigns: 3, hue: '#86EFAC', joinedYear: 2022, description: 'Ergonomic design pushed forward by those who sit in them daily.' },
+    { name: 'Nike', iconPath: 'M24 7.8L6.442 15.276c-1.456.616-2.679.925-3.668.925-1.12 0-1.933-.392-2.437-1.177-.317-.504-.41-1.143-.28-1.918.13-.775.476-1.6 1.036-2.478.467-.71 1.232-1.643 2.297-2.8a6.122 6.122 0 00-.784 1.848c-.28 1.195-.028 2.072.756 2.632.373.261.886.392 1.54.392.522 0 1.11-.084 1.764-.252L24 7.8z', iconHex: '#111111', totalRaised: '$4.2M', campaigns: 12, hue: '#FF6B2C', joinedYear: 2019, description: 'Global athletic innovation. From concept to production with verified consumer demand.' },
+    { name: 'Sony', iconPath: 'M8.5505 9.8881c.921 0 1.6574.2303 2.2209.7423.3848.3485.5999.8454.5939 1.3665a1.9081 1.9081 0 0 1-.5939 1.3726c-.5272.4848-1.3483.7423-2.221.7423-.8725 0-1.6785-.2575-2.2148-.7423-.3908-.3485-.609-.8484-.603-1.3726 0-.518.2182-1.015.603-1.3665.5-.4545 1.3847-.7423 2.2149-.7423zm.003 3.6692c.4606 0 .8878-.1606 1.1878-.4575.2999-.2999.4332-.6605.4332-1.1029 0-.4242-.1484-.821-.4333-1.1029-.2938-.2908-.7332-.4545-1.1877-.4545s-.8938.1637-1.1907.4545c-.2848.2818-.4333.6787-.4333 1.103-.006.409.1485.806.4333 1.1029.2969.2939.7332.4575 1.1907.4575zm-4.8418-1.9665c.1605.0424.315.094.4666.1636a1.352 1.352 0 0 1 .3787.2576c.197.206.309.4817.306.7665a.9643.9643 0 0 1-.3787.7788 2.0662 2.0662 0 0 1-.709.3485 3.7231 3.7231 0 0 1-1.1938.1697c-.352 0-.5467-.0406-.8138-.0962l-.077-.016c-.294-.0666-.5817-.1575-.8575-.2787a.0695.0695 0 0 0-.0424-.0121c-.0454 0-.0818.0394-.0818.0848v.203H.1212v-1.4786h.5242a.7559.7559 0 0 0 .1363.418c.2121.2607.4394.3607.6575.4395.3666.1212.7514.1848 1.1362.1969.5526 0 .8756-.134.9455-.163l.009-.0037.0062-.0023c.0616-.0226.3119-.1143.3119-.3916 0-.2743-.2338-.334-.387-.373l-.022-.0058c-.1708-.046-.562-.0872-.9897-.1323l-.1526-.016c-.4848-.0515-.9696-.1273-1.1968-.1758-.4977-.1097-.6942-.2917-.816-.4045l-.0082-.0076A1.0192 1.0192 0 0 1 0 11.1608c0-.497.3394-.797.7575-.9817.4454-.2.9756-.288 1.4392-.288.8211.0031 1.4877.2697 1.727.394.097.0515.1455-.0121.1455-.0606v-.1484h.5272v1.2876h-.4727a.9056.9056 0 0 0-.2939-.4909 1.289 1.289 0 0 0-.297-.1787c-.3968-.1667-.821-.2515-1.2513-.2455-.4423 0-.8665.085-1.0786.2153-.1333.0818-.2.1848-.2.306 0 .1727.1454.2424.2182.2636.1967.0597.6328.103.972.1369.0736.0073.1426.0142.2036.0206.3272.0334 1.012.1243 1.315.2zm18.1673-.9966v-.4787H24v.4696h-.4757c-.1727 0-.2424.0334-.3727.1788l-1.4271 1.63a.098.098 0 0 0-.0182.0698v.7423a1.106 1.106 0 0 0 .0121.103.1496.1496 0 0 0 .1.0909.9368.9368 0 0 0 .1303.009h.4848v.4698h-2.5724v-.4697h.4606a.9343.9343 0 0 0 .1302-.0091.1627.1627 0 0 0 .1031-.091.5626.5626 0 0 0 .009-.1v-.7422c0-.0242 0-.0242-.0333-.0636a606.7592 606.7592 0 0 0-1.4119-1.6028c-.0758-.0788-.2061-.2061-.406-.2061h-.4576v-.4696h2.5876v.4696h-.3121c-.0697 0-.1182.0697-.0576.1455 0 0 .8696 1.0392.8787 1.0513.0091.0122.0152.0122.0273.003.0121-.009.8938-1.0453.8999-1.0543a.0912.0912 0 0 0-.0182-.1273.1095.1095 0 0 0-.0606-.0182zm-6.284-.0031h.4848c.2212 0 .2606.0848.2636.2909l.0273 1.5664-2.5815-2.324H11.944v.4697h.412c.297 0 .3182.1636.3182.309v2.2138c.0004.1285.0009.295-.1818.295h-.506v.4667h2.1634v-.4697h-.5273c-.212 0-.2211-.097-.2242-.303v-1.8816l2.9724 2.6511h.7575l-.0394-2.9966c.003-.218.0182-.2908.2424-.2908h.4726v-.4697H15.595Z', iconHex: '#FFFFFF', totalRaised: '$2.1M', campaigns: 5, hue: '#38BDF8', joinedYear: 2020, description: 'Reimagining consumer electronics through community-backed co-creation.' },
+    { name: 'Leica', iconPath: 'M9.42 10.954c.198.011.35.146.343.29-.033.94-1.19.795-1.19.795s.17-1.126.846-1.085zm9.313 2.064c.794 0 .952-1.605.952-1.64a.41.41 0 0 0-.423-.398c-.66 0-.9 1.203-.9 1.508 0 .116.007.53.37.53zm-9.949-5.08c.036-.318-.12-.662-.555-.662-1.06 0-1.509 2.963-1.509 2.963s1.853-.438 2.064-2.301zm-6.244 5.82c-.207.021-.423.114-.423.344 0 .139.235.382.608.37.49-.014 1.085-.475 1.085-.475s-.506-.207-1.085-.239a1.026 1.026 0 0 0-.185 0zM24 12.003C24 18.628 18.627 24 12 24 5.37 24 0 18.628 0 12.003 0 5.374 5.371 0 12 0c6.627 0 12 5.374 12 12.003zM11.933 9.446c0 .446.377.555.794.555.418 0 .82-.18.82-.635 0-.456-.48-.555-.82-.555-.471 0-.794.193-.794.635zM9.366 10.53c-1.41 0-2.407.866-2.407 1.904 0 .948.808 1.35 1.852 1.35 1.184 0 2.354-.714 2.354-.714s.071.714 1.006.714c.964 0 1.72-.714 1.72-.714s.417.687 1.376.687c.98 0 1.72-.793 1.72-.793s.272.74 1.243.74c.759 0 1.164-.476 1.164-.476s.212.477.873.477c.808 0 1.402-.556 1.402-.556l-.132-.476s-.307.238-.529.238c-.168 0-.265-.137-.265-.291 0-.347.556-2.064.556-2.064l-1.35.026-.052.212s-.201-.37-.9-.37c-1.352 0-2.085 1.166-2.116 1.852-.007.149-.027.158-.027.158-.032.036-.497.583-1.085.583-.47 0-.555-.384-.555-.635 0-.273.233-1.35.873-1.35.348 0 .555.291.555.291l.186-.608s-.292-.236-.9-.238c-1.308-.001-2.19.967-2.222 1.852-.007.132-.03.176-.027.185-.043.053-.35.423-.767.423-.286 0-.291-.219-.291-.317 0-.135.555-2.064.555-2.064l-1.481.026-.503 1.879s-.826.581-1.958.661c-.584.04-.794-.32-.794-.529v-.08c.001 0 .246.027.424.027.14 0 1.878-.134 1.878-1.19 0-.605-.613-.82-1.376-.82zm12.568 3.889-.132-.476s-3.096 1.078-9.022 1.005c-4.089-.05-7.224-1.243-7.224-1.243s.119-.212.185-.344c.41-.835.9-2.514.9-2.514s2.805-.785 2.805-3.016c0-.706-.674-1.162-1.323-1.19-2.264-.089-2.877 3.128-3.017 3.677-.007.039-.026.053-.026.053-.698-.095-1.085-.238-1.085-.238l-.159.45c.471.223 1.165.29 1.165.29-.136.865-.82 2.488-.82 2.488s-.608-.186-1.376-.186c-1 0-1.35.47-1.376.768-.066.77.911 1.137 1.587 1.137 1.32 0 2.011-.714 2.011-.714s3.695 1.402 7.567 1.402c5.069 0 9.34-1.35 9.34-1.35z', iconHex: '#E20612', totalRaised: '$8.5M', campaigns: 3, hue: '#FBBF24', joinedYear: 2021, description: 'Precision optical engineering, financed by the photographers who demand it.' },
+    { name: 'Arcteryx', brandLogo: '/brands/arcteryx_logo_1772059192054.png', totalRaised: '$1.1M', campaigns: 4, hue: '#FF3D00', joinedYear: 2022, description: 'Pushing technical outerwear boundaries via demand-verified prototyping.' },
+    { name: 'Teenage Eng', brandLogo: '/brands/teenage_eng_logo_1772059155534.png', totalRaised: '$950k', campaigns: 2, hue: '#F1F5F9', joinedYear: 2023, description: 'Musical instruments and creative tools backed by the community.' },
+    { name: 'Braun', brandLogo: 'https://logo.clearbit.com/braun.com', totalRaised: '$400k', campaigns: 6, hue: '#E11D48', joinedYear: 2020, description: 'Timeless design reissued through verified demand signals.' },
+    { name: 'Dyson', brandLogo: '/brands/dyson_logo_1772059346895.png', totalRaised: '$0', campaigns: 1, hue: '#C084FC', joinedYear: 2024, description: 'Moonshot engineering concepts validated by real consumers.' },
+    { name: 'Nintendo', brandLogo: 'https://logo.clearbit.com/nintendo.com', totalRaised: '$1.8M', campaigns: 2, hue: '#6366F1', joinedYear: 2023, description: 'Retro gaming hardware revived through community pledges.' },
+    { name: 'Herman Miller', brandLogo: 'https://logo.clearbit.com/hermanmiller.com', totalRaised: '$620k', campaigns: 3, hue: '#86EFAC', joinedYear: 2022, description: 'Ergonomic design pushed forward by those who sit in them daily.' },
 ];
 
 // ── GLOBAL STATS ──

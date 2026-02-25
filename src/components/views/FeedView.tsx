@@ -10,7 +10,6 @@ import { CAMPAIGNS } from "@/data/campaigns";
 import { SCROLL_COOLDOWN_MS, SWIPE_COOLDOWN_MS, WHEEL_DELTA_THRESHOLD } from "@/constants";
 import type { Campaign, PledgeState, Squad } from "@/types";
 import LifecycleTracker from "@/components/ui/LifecycleTracker";
-import PledgeModal from "@/components/ui/PledgeModal";
 
 interface FeedViewProps {
     currentIndex: number;
@@ -23,19 +22,18 @@ interface FeedViewProps {
     hasInteracted3D: boolean;
     isPitchOpen?: boolean;
     dragProgressRef: React.MutableRefObject<number>;
+    pledgeState: PledgeState;
 }
 
 export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
-    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen, dragProgressRef,
+    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen, dragProgressRef, pledgeState
 }: FeedViewProps) {
-    const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>({});
     const [liked, setLiked] = useState<Record<number, boolean>>({});
     const [saved, setSaved] = useState<Record<number, boolean>>({});
 
     // Hydrate from localStorage after mount (avoids SSR mismatch)
     useEffect(() => {
-        try { setPledgeStates(JSON.parse(localStorage.getItem('dp-pledges') ?? '{}')); } catch { }
         try { setLiked(JSON.parse(localStorage.getItem('dp-liked') ?? '{}')); } catch { }
         try { setSaved(JSON.parse(localStorage.getItem('dp-saved') ?? '{}')); } catch { }
     }, []);
@@ -48,7 +46,6 @@ export default function FeedView({
     const lastScrollTime = useRef(0);
     const sheetStartY = useRef(0);
 
-    const currentPledgeState = pledgeStates[currentCampaign.id] ?? "initiated";
     const isLiked = liked[currentCampaign.id] ?? false;
     const isSaved = saved[currentCampaign.id] ?? false;
     const progressPercent = Math.min((currentCampaign.pledged / currentCampaign.goal) * 100, 100);
@@ -171,17 +168,8 @@ export default function FeedView({
     }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev, isInteractingWithObject, dragProgressRef]);
 
     // Persist to localStorage
-    useEffect(() => { try { localStorage.setItem('dp-pledges', JSON.stringify(pledgeStates)); } catch { } }, [pledgeStates]);
     useEffect(() => { try { localStorage.setItem('dp-liked', JSON.stringify(liked)); } catch { } }, [liked]);
     useEffect(() => { try { localStorage.setItem('dp-saved', JSON.stringify(saved)); } catch { } }, [saved]);
-
-    const handlePledge = (campaignId: number) => {
-        const current = pledgeStates[campaignId] ?? "initiated";
-        if (current === "initiated") {
-            setPledgeStates(prev => ({ ...prev, [campaignId]: "escrowed" }));
-            setTimeout(() => setPledgeStates(prev => ({ ...prev, [campaignId]: "locked" })), 1500);
-        }
-    };
 
     const handleShare = async () => {
         const data = { title: `${currentCampaign.title} — The Demand Pool`, text: `${currentCampaign.title} by ${currentCampaign.brand}`, url: window.location.href };
@@ -209,42 +197,43 @@ export default function FeedView({
                         className="fixed z-[200] pointer-events-none"
                         style={{ left: doubleTapHeart.x - 36, top: doubleTapHeart.y - 36 }}
                     >
-                        <Heart size={72} className="text-[#34D399] fill-[#34D399] drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" />
+                        <Heart size={72} className="text-[#F43F5E] fill-[#F43F5E] drop-shadow-md" />
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* ── BACKGROUND COLOR WASH ── */}
-            <div className="absolute inset-0 pointer-events-none z-[0] mix-blend-screen">
+            {/* ── VERY SUBTLE COLOR WASH ── */}
+            <div className="absolute inset-0 pointer-events-none z-[0] opacity-10 mix-blend-multiply">
                 <motion.div
                     key={currentCampaign.id + "-wash"}
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.3 }}
-                    transition={{ duration: 1 }}
-                    className="absolute w-[120%] h-[60%] blur-[100px] rounded-full top-[20%] left-1/2 -translate-x-1/2 animate-float"
+                    animate={{ opacity: 0.5, scale: [1, 1.1, 1], x: [0, 20, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute w-[120%] h-[120%] blur-[120px] rounded-full top-[-10%] left-[-10%]"
                     style={{ backgroundColor: currentCampaign.color }}
                 />
             </div>
 
-            {/* ── VIGNETTE ── */}
+            {/* ── LIGHT VIGNETTE ── */}
             <div className="absolute inset-0 pointer-events-none z-[1]">
-                <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-black/95 via-black/50 to-transparent" />
-                <div className="absolute top-0 left-0 right-0 h-[25%] bg-gradient-to-b from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-white via-white/80 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-white/90 via-white/20 to-transparent" />
             </div>
 
             {/* ── TOP BAR ── */}
             <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-150 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
-                <div className="flex items-center justify-between px-3 py-2">
-                    <div className="flex items-center glass-dark rounded-full p-0.5">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center bg-gray-100/60 backdrop-blur-xl rounded-full p-1 shadow-sm border border-gray-200/50">
                         {(["foryou", "trending"] as const).map(tab => (
-                            <button key={tab} onClick={() => setFeedTab(tab)} className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${feedTab === tab ? "bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]" : "text-white/50 hover:text-white/80"}`}>
-                                {tab === "foryou" ? "For You" : "Trending"}
+                            <button key={tab} onClick={() => setFeedTab(tab)} className={`px-4 py-1.5 rounded-full text-[12px] font-semibold transition-all ${feedTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}>
+                                {tab === "foryou" ? "Discover" : "Trending"}
                             </button>
                         ))}
                     </div>
-                    <div className="glass-dark rounded-full px-2.5 py-1">
-                        <span className="text-[10px] font-bold text-white tabular-nums tracking-widest">
-                            {String(currentIndex + 1).padStart(2, "0")}<span className="text-[var(--neon-cyan)] mx-0.5">/</span>{CAMPAIGNS.length}
+                    {/* Minimal Pagination */}
+                    <div className="bg-white/60 backdrop-blur-xl rounded-full px-3 py-1.5 shadow-sm border border-gray-200/50">
+                        <span className="text-[12px] font-semibold text-gray-700 tracking-wide">
+                            {currentIndex + 1} <span className="text-gray-400 mx-0.5">/</span> {CAMPAIGNS.length}
                         </span>
                     </div>
                 </div>
@@ -259,9 +248,9 @@ export default function FeedView({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.15 }}
                         onClick={() => setIsZenMode(false)}
-                        className="absolute top-14 right-4 z-50 w-9 h-9 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center pointer-events-auto"
+                        className="absolute top-14 right-4 z-50 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center shadow-md pointer-events-auto border border-gray-200"
                     >
-                        <X size={16} className="text-white/70" />
+                        <X size={20} className="text-gray-800" />
                     </motion.button>
                 )}
             </AnimatePresence>
@@ -270,93 +259,115 @@ export default function FeedView({
             <AnimatePresence>
                 {!hasInteracted3D && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ delay: 2 }} className="absolute top-[38%] left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2">
-                        <div className="bg-black/30 backdrop-blur-sm rounded-full text-white text-[9px] font-medium uppercase tracking-widest px-3 py-1.5 flex items-center gap-1.5">
+                        <div className="bg-white/80 backdrop-blur-md shadow-sm border border-gray-100 rounded-full text-gray-700 text-[10px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center gap-1.5">
                             <motion.span animate={{ rotateZ: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="inline-block text-xs">↻</motion.span>
-                            Drag to rotate
-                        </div>
-                        <div className="bg-black/30 backdrop-blur-sm rounded-full text-white text-[8px] font-medium uppercase tracking-widest px-2.5 py-1 opacity-60">
-                            Pinch to zoom
-                        </div>
-                        <div className="bg-black/30 backdrop-blur-sm rounded-full text-white text-[8px] font-medium uppercase tracking-widest px-2.5 py-1 opacity-45 flex items-center gap-1.5">
-                            <Maximize2 size={9} /> Tap for full screen
+                            Drag to explore
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* ── RIGHT SIDEBAR ── */}
-            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-4 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 16px)" }}>
-                <div className="relative mb-1">
-                    <div className="w-11 h-11 rounded-full border border-white/20 glass flex items-center justify-center font-bold text-[12px] text-white shadow-[0_0_15px_rgba(0,0,0,0.5)]" style={{ background: `linear-gradient(135deg, ${currentCampaign.color}50, transparent)` }}>
-                        {currentCampaign.brand.charAt(0)}
+            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-3 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 16px)" }}>
+                <div className="relative mb-2">
+                    <div className="w-10 h-10 rounded-full border-[1.5px] border-gray-200 bg-white flex items-center justify-center font-bold text-[14px] text-gray-800 shadow-sm overflow-hidden p-1">
+                        {currentCampaign.iconPath ? (
+                            <svg viewBox="0 0 24 24" className="w-6 h-6" style={{ fill: currentCampaign.iconHex || '#000' }}>
+                                <path d={currentCampaign.iconPath} />
+                            </svg>
+                        ) : currentCampaign.brandLogo ? (
+                            <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="w-full h-full object-contain mix-blend-multiply" />
+                        ) : (
+                            currentCampaign.brand.charAt(0)
+                        )}
                     </div>
                 </div>
-                <SideBtn icon={<Heart size={26} strokeWidth={isLiked ? 0 : 1.8} className={isLiked ? "fill-[var(--neon-pink)] text-[var(--neon-pink)] drop-shadow-[0_0_8px_var(--neon-pink)]" : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"} />} label={String(currentCampaign.backers ?? 0)} onClick={() => setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked }))} />
-                <SideBtn icon={<MessageCircle size={26} className="text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]" />} label={currentCampaign.squadsCount} onClick={() => setActiveSheet("comments")} />
-                <SideBtn icon={<Bookmark size={24} strokeWidth={isSaved ? 0 : 1.8} className={isSaved ? "fill-[#FBBF24] text-[#FBBF24]" : "text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"} />} label="Save" onClick={() => setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved }))} />
-                <SideBtn icon={<Share2 size={24} className="text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]" />} label="Share" onClick={handleShare} />
+                <SideBtn icon={<Heart size={24} strokeWidth={isLiked ? 0 : 2} className={isLiked ? "fill-[#F43F5E] text-[#F43F5E] drop-shadow-sm" : "text-gray-700 drop-shadow-sm"} />} label={String(currentCampaign.backers ?? 0)} onClick={() => { setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked })); }} />
+                <SideBtn icon={<MessageCircle size={24} className="text-gray-700 drop-shadow-sm" />} label={currentCampaign.squadsCount} onClick={() => { setActiveSheet("comments"); }} />
+                <SideBtn icon={<Bookmark size={22} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-gray-900 text-gray-900" : "text-gray-700 drop-shadow-sm"} />} label="Save" onClick={() => { setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved })); }} />
+                <SideBtn icon={<Share2 size={22} className="text-gray-700 drop-shadow-sm" />} label="Share" onClick={() => { handleShare(); }} />
             </div>
 
             {/* ── BOTTOM INFO ── */}
-            <div className={`absolute left-0 right-[56px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) - 2px)" }}>
-                {/* mode="wait" ensures old content fully exits before new content enters,
-                    preventing the ghost where both campaign infos overlap mid-transition */}
+            <div className={`absolute left-0 right-[64px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 12px)" }}>
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentCampaign.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="bg-white/95 backdrop-blur-3xl p-3 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100"
                     >
-                        <div className="mb-0.5 w-fit"><LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact /></div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-white font-semibold text-[10px] uppercase tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">{currentCampaign.brand}</span>
-                            <CheckCircle2 size={9} className="text-blue-300" />
+                        <div className="flex items-center gap-2 mb-1 w-fit">
+                            {currentCampaign.iconPath ? (
+                                <div className="h-6 w-6 flex items-center justify-center bg-transparent rounded-md">
+                                    <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ fill: currentCampaign.iconHex || '#000' }}>
+                                        <path d={currentCampaign.iconPath} />
+                                    </svg>
+                                </div>
+                            ) : currentCampaign.brandLogo ? (
+                                <div className="h-6 flex items-center bg-transparent rounded-md">
+                                    <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="h-5 object-contain" />
+                                </div>
+                            ) : (
+                                <span className="text-gray-500 font-semibold text-[11px] uppercase tracking-wider">{currentCampaign.brand}</span>
+                            )}
+                            <LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact />
                         </div>
-                        <h2 className="text-white font-black text-[15px] uppercase tracking-tight leading-tight mb-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
-                            {currentCampaign.title}
-                        </h2>
-                        <p className="text-white/75 text-[10px] font-medium leading-snug mb-1.5 line-clamp-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                            <h2 className="text-gray-900 font-bold text-[15px] tracking-tight leading-none">
+                                {currentCampaign.title}
+                            </h2>
+                            <CheckCircle2 size={12} className="text-blue-500" />
+                        </div>
+
+                        <p className="text-gray-600 text-[10px] font-medium leading-snug mb-2 line-clamp-1">
                             {currentCampaign.description}
                         </p>
 
                         <div className="pointer-events-auto">
-                            <div className="flex items-center gap-2 mb-1">
-                                <div className="flex-1 h-[3px] bg-white/20 rounded-full overflow-hidden">
-                                    <motion.div initial={false} animate={{ width: `${progressPercent}%` }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="h-full rounded-full" style={{ backgroundColor: currentCampaign.color }} />
+                            {/* Standard E-commerce Progress Bar */}
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressPercent}%` }}
+                                        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                                        className="h-full rounded-full"
+                                        style={{ backgroundColor: currentCampaign.color }}
+                                    />
                                 </div>
-                                <span className="text-white/70 text-[9px] font-bold tabular-nums">{Math.round(progressPercent)}%</span>
+                                <span className="text-gray-900 text-[10px] font-semibold">
+                                    {Math.round(progressPercent)}%
+                                </span>
                             </div>
 
-                            <div className="flex items-center gap-1.5 mt-2">
+                            <div className="flex items-center gap-2 mt-2">
+                                {/* Premium Pre-order Button */}
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
-                                    onClick={() => setShowModal(true)}
-                                    disabled={currentPledgeState !== "initiated"}
-                                    className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider text-[11px] transition-all border relative overflow-hidden ${currentPledgeState === "initiated"
-                                        ? "glass-dark border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.3)] shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-                                        : currentPledgeState === "escrowed"
-                                            ? "bg-white/10 text-white/90 border-white/15"
-                                            : "glass text-[var(--electric-green)] border-[var(--electric-green)]"
-                                        }`}
-                                    style={currentPledgeState === "initiated" ? {
-                                        color: currentCampaign.color,
-                                    } : undefined}
+                                    onClick={() => alert("Pre-order initiated.")}
+                                    className="flex-[2] py-1.5 px-3 rounded-lg flex items-center justify-center gap-2 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
+                                    style={{ backgroundColor: currentCampaign.color }}
                                 >
-                                    {currentPledgeState === "initiated" && <div className="absolute inset-0 opacity-20 pointer-events-none shimmer" style={{ backgroundColor: currentCampaign.color }} />}
-                                    <span className="relative z-10 flex items-center gap-1.5">
-                                        {currentPledgeState === "initiated" ? (<><Lock size={12} /> Lock $100</>) : currentPledgeState === "escrowed" ? (<><Zap size={12} className="animate-spin" /> Securing...</>) : (<><CheckCircle2 size={12} /> Secured</>)}
-                                    </span>
+                                    Pre-order now
                                 </motion.button>
-                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActiveSheet("squads")} className="py-2.5 px-4 rounded-xl glass-dark border border-[rgba(255,255,255,0.05)] flex items-center gap-1.5 text-white/85 text-[10px] font-bold shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:bg-white/10 transition-colors">
-                                    <Users size={12} /> {currentCampaign.squadsCount}
+
+                                {/* Secondary Button */}
+                                <motion.button
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={() => setActiveSheet("specs")}
+                                    className="flex-1 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-[12px] font-semibold transition-all flex items-center justify-center"
+                                >
+                                    Details
                                 </motion.button>
                             </div>
 
-                            <div className="flex items-center gap-1 mt-1">
-                                <ShieldCheck size={8} className="text-[#34D399]" />
-                                <span className="text-white/55 text-[8px] font-medium uppercase tracking-wider">Escrow protected · {currentCampaign.deadline}</span>
+                            <div className="flex items-center justify-center w-full gap-1 mt-1.5">
+                                <ShieldCheck size={9} className="text-emerald-500" />
+                                <span className="text-gray-400 text-[8px] font-semibold uppercase tracking-wide">Fully refundable until {currentCampaign.deadline}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -367,47 +378,49 @@ export default function FeedView({
             <AnimatePresence>
                 {activeSheet !== "none" && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-40 pointer-events-auto" onClick={() => setActiveSheet("none")}>
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                        <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
                         <motion.div
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             onClick={e => e.stopPropagation()}
-                            className="absolute bottom-0 left-0 right-0 h-[60vh] glass-heavy rounded-t-3xl border-t border-[rgba(255,255,255,0.1)] flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                            className="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-3xl border-t border-gray-200 flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
                         >
                             <div
-                                className="flex justify-center pt-3 pb-2 cursor-grab"
+                                className="flex justify-center pt-4 pb-2 cursor-grab"
                                 onTouchStart={(e) => { sheetStartY.current = e.touches[0].clientY; }}
                                 onTouchEnd={(e) => { const dy = e.changedTouches[0].clientY - sheetStartY.current; if (dy > 60) setActiveSheet("none"); }}
-                            ><div className="w-10 h-1.5 bg-white/20 rounded-full" /></div>
-                            <div className="flex justify-between items-center px-5 pb-3 border-b border-[rgba(255,255,255,0.05)]">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-white">
-                                    {activeSheet === "specs" ? "Specs" : activeSheet === "squads" ? "Squads" : "Discussion"}
+                            ><div className="w-12 h-1.5 bg-gray-300 rounded-full" /></div>
+
+                            <div className="flex justify-between items-center px-6 pb-4 border-b border-gray-100 mt-2">
+                                <h3 className="text-[18px] font-bold text-gray-900">
+                                    {activeSheet === "specs" ? "Product Details" : activeSheet === "squads" ? "Backers" : "Community Reviews"}
                                 </h3>
-                                <button onClick={() => setActiveSheet("none")} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"><X size={16} /></button>
+                                <button onClick={() => setActiveSheet("none")} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-600"><X size={18} /></button>
                             </div>
-                            <div className="flex-1 overflow-y-auto no-scrollbar p-5 text-white/90">
+
+                            <div className="flex-1 overflow-y-auto no-scrollbar p-6">
                                 {activeSheet === "specs" && (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         {currentCampaign.specs.map((s: string, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 glass-dark rounded-xl p-3 border border-white/5">
-                                                <div className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]" style={{ backgroundColor: currentCampaign.color, color: currentCampaign.color }} />
-                                                <span className="font-semibold text-[11px] tracking-wide">{s}</span>
+                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: currentCampaign.color }} />
+                                                <span className="font-semibold text-[14px] text-gray-800">{s}</span>
                                             </motion.div>
                                         ))}
                                         {currentCampaign.variants && currentCampaign.variants.length > 0 && (
-                                            <div className="mt-5">
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-3">Community Vote</div>
-                                                <div className="grid grid-cols-3 gap-2">
+                                            <div className="mt-8">
+                                                <div className="text-[12px] font-bold uppercase tracking-wider text-gray-400 mb-4">Available Options</div>
+                                                <div className="grid grid-cols-3 gap-3">
                                                     {currentCampaign.variants.map(v => {
                                                         const total = currentCampaign.variants!.reduce((a, b) => a + b.votes, 0);
                                                         const pct = Math.round((v.votes / total) * 100);
                                                         return (
-                                                            <div key={v.id} className="glass-dark rounded-xl p-2.5 border border-white/5 text-center transition-transform hover:scale-105">
-                                                                {v.hex && <div className="w-full h-5 rounded-md mb-2 shadow-[0_0_10px_currentColor] border border-white/10" style={{ backgroundColor: v.hex, color: v.hex }} />}
-                                                                <div className="text-[9px] font-bold tracking-wide">{v.label}</div>
-                                                                <div className="text-[8px] text-[var(--neon-cyan)] mt-0.5 font-mono">{pct}%</div>
+                                                            <div key={v.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 text-center transition-transform hover:scale-105 shadow-sm">
+                                                                {v.hex && <div className="w-full h-6 rounded-md mb-3 border border-gray-200/50" style={{ backgroundColor: v.hex }} />}
+                                                                <div className="text-[12px] font-semibold text-gray-800">{v.label}</div>
+                                                                <div className="text-[11px] text-gray-500 mt-1">{pct}% backed</div>
                                                             </div>
                                                         );
                                                     })}
@@ -416,72 +429,76 @@ export default function FeedView({
                                         )}
                                     </div>
                                 )}
+
                                 {activeSheet === "squads" && (
-                                    <div className="space-y-3">
-                                        <div className="glass-dark rounded-xl p-5 border border-white/5 text-center relative overflow-hidden">
-                                            <div className="absolute inset-0 opacity-10 blur-2xl" style={{ backgroundColor: currentCampaign.color }} />
+                                    <div className="space-y-4">
+                                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 text-center relative overflow-hidden mb-6">
                                             <div className="relative z-10">
-                                                <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1.5 flex items-center justify-center gap-1.5">
-                                                    <Zap size={10} className="text-[var(--neon-cyan)]" /> Total Pooled
+                                                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5">
+                                                    <Zap size={14} className="text-amber-500" /> Total Pledged
                                                 </div>
-                                                <div className="text-3xl font-black tabular-nums tracking-tighter drop-shadow-[0_0_15px_currentColor]" style={{ color: currentCampaign.color }}>
+                                                <div className="text-4xl font-black tracking-tight" style={{ color: currentCampaign.color }}>
                                                     ${currentCampaign.squads.reduce((a: number, sq: Squad) => a + parseInt(sq.amount.replace(/\D/g, "")) * 100, 0).toLocaleString()}
                                                 </div>
                                             </div>
                                         </div>
+                                        <h4 className="text-[14px] font-bold text-gray-900 mb-4">Top Groups</h4>
                                         {currentCampaign.squads.map((sq: Squad, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center glass-dark rounded-xl p-3.5 border border-white/5" style={{ borderLeft: `2px solid ${currentCampaign.color}` }}>
+                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center bg-white rounded-xl p-4 border border-gray-200 shadow-sm" style={{ borderLeft: `3px solid ${currentCampaign.color}` }}>
                                                 <div>
-                                                    <span className="font-bold text-[11px] tracking-wide">{sq.name}</span>
-                                                    {sq.members && <span className="text-[9px] text-white/40 ml-2 font-mono">{sq.members}</span>}
+                                                    <span className="font-bold text-[14px] text-gray-900">{sq.name}</span>
+                                                    {sq.members && <span className="text-[12px] text-gray-500 ml-2">{sq.members} members</span>}
                                                 </div>
-                                                <span className="font-bold text-white/50 text-[11px] tabular-nums font-mono">{sq.amount}</span>
+                                                <span className="font-bold text-gray-800 text-[14px]">{sq.amount}</span>
                                             </motion.div>
                                         ))}
                                     </div>
                                 )}
+
                                 {activeSheet === "comments" && (
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         {[
-                                            { user: "SneakerGod", avatar: "S", text: "This is gonna sell out so fast 🔥", time: "2h", likes: 42 },
-                                            { user: "TechNinja", avatar: "T", text: "The specs on this are insane.", time: "4h", likes: 28 },
-                                            { user: "DesignFan", avatar: "D", text: "Finally someone making what we want", time: "6h", likes: 15 },
-                                            { user: "RetroWave", avatar: "R", text: "Pledged day one. Future of retail.", time: "12h", likes: 67 },
+                                            { user: "Sarah J.", avatar: "S", text: "Just locked in my pre-order! I've been waiting for a reissue for years.", time: "2h", likes: 42 },
+                                            { user: "Tech Reviewer", avatar: "T", text: "The spec sheet looks incredible. If they actually deliver on the battery life, this is a game changer.", time: "4h", likes: 28 },
+                                            { user: "David M.", avatar: "D", text: "Love the clean design here.", time: "6h", likes: 15 },
+                                            { user: "Anna K.", avatar: "A", text: "Backed! Need this ASAP.", time: "12h", likes: 67 },
                                         ].map((c, i) => (
-                                            <motion.div key={`seed-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-[11px] text-white/50 shrink-0 border border-white/5">{c.avatar}</div>
-                                                <div className="flex-1 min-w-0 pb-3 border-b border-white/5">
+                                            <motion.div key={`seed-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[14px] text-gray-500 shrink-0 border border-gray-200">{c.avatar}</div>
+                                                <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-[11px] tracking-wide text-white/80">{c.user}</span>
-                                                        <span className="text-[9px] text-white/30 font-mono">{c.time}</span>
+                                                        <span className="font-bold text-[14px] text-gray-900">{c.user}</span>
+                                                        <span className="text-[12px] text-gray-400">{c.time}</span>
                                                     </div>
-                                                    <p className="text-[11px] text-white/60 mt-1 leading-relaxed">{c.text}</p>
-                                                    <button className="text-[10px] text-white/40 mt-1.5 flex items-center gap-1 hover:text-[var(--neon-pink)] transition-colors"><Heart size={10} /> {c.likes}</button>
+                                                    <p className="text-[14px] text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
+                                                    <button className="text-[12px] text-gray-500 mt-2 flex items-center gap-1.5 hover:text-rose-500 transition-colors"><Heart size={14} /> {c.likes}</button>
                                                 </div>
                                             </motion.div>
                                         ))}
+
                                         {/* User-posted comments */}
                                         {(userComments[currentCampaign.id] ?? []).map((c, i) => (
-                                            <motion.div key={`user-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
-                                                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] text-white shrink-0 border border-white/10 shadow-[0_0_10px_currentColor]" style={{ backgroundColor: currentCampaign.color, color: currentCampaign.color }}>{c.user[0]}</div>
-                                                <div className="flex-1 min-w-0 pb-3 border-b border-white/5">
+                                            <motion.div key={`user-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-4">
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[14px] text-white shrink-0 shadow-sm" style={{ backgroundColor: currentCampaign.color }}>{c.user[0]}</div>
+                                                <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-[11px] tracking-wide text-white/80">{c.user}</span>
-                                                        <span className="text-[9px] text-[var(--neon-cyan)] font-mono">now</span>
+                                                        <span className="font-bold text-[14px] text-gray-900">{c.user}</span>
+                                                        <span className="text-[12px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full font-medium">Just now</span>
                                                     </div>
-                                                    <p className="text-[11px] text-white/60 mt-1 leading-relaxed">{c.text}</p>
+                                                    <p className="text-[14px] text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
                                                 </div>
                                             </motion.div>
                                         ))}
-                                        <div className="sticky bottom-0 pt-3 pb-safe bg-transparent -mx-5 px-5 glass-heavy border-t border-[rgba(255,255,255,0.05)] flex items-center gap-2">
+
+                                        <div className="sticky bottom-0 pt-4 pb-safe bg-white -mx-6 px-6 border-t border-gray-100 flex items-center gap-3">
                                             <input
                                                 value={commentInput}
                                                 onChange={(e) => setCommentInput(e.target.value)}
                                                 onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
-                                                placeholder="Add a transmission..."
-                                                className="flex-1 glass-dark rounded-full px-4 py-2.5 text-[11px] text-white outline-none placeholder-white/30 border border-white/10 focus:border-[var(--neon-cyan)] focus:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all font-mono"
+                                                placeholder="Ask a question or leave a comment..."
+                                                className="flex-1 bg-gray-100 rounded-full px-5 py-3.5 text-[14px] text-gray-900 outline-none placeholder-gray-500 border border-transparent focus:border-gray-300 focus:bg-white transition-all shadow-inner"
                                             />
-                                            <button onClick={handlePostComment} className="text-[11px] font-bold uppercase tracking-widest px-3" style={{ color: currentCampaign.color }}>Send</button>
+                                            <button onClick={handlePostComment} className="text-[14px] font-bold px-4 py-2 rounded-full" style={{ color: currentCampaign.color, backgroundColor: `${currentCampaign.color}15` }}>Post</button>
                                         </div>
                                     </div>
                                 )}
@@ -490,17 +507,17 @@ export default function FeedView({
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <PledgeModal campaign={currentCampaign} isOpen={showModal} onClose={() => setShowModal(false)} onPledge={handlePledge} pledgeState={currentPledgeState} />
         </motion.div>
     );
 }
 
 function SideBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
     return (
-        <motion.button onClick={onClick} whileTap={{ scale: 0.85 }} className="flex flex-col items-center gap-0.5">
-            {icon}
-            <span className="text-white/85 text-[9px] font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">{label}</span>
+        <motion.button onClick={onClick} whileHover={{ scale: 1.1, x: -2 }} whileTap={{ scale: 0.9 }} className="flex flex-col items-center gap-1.5 transition-all">
+            <div className="bg-white/60 backdrop-blur-md p-2 rounded-full shadow-sm border border-gray-100/50 flex items-center justify-center">
+                {icon}
+            </div>
+            <span className="text-gray-500 text-[10px] font-semibold tracking-wide drop-shadow-sm">{label}</span>
         </motion.button>
     );
 }

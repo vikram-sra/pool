@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Lock, Zap, Factory, CheckCircle2 } from "lucide-react";
+import { Sparkles, Brain, Vote, Zap, Lock, CheckCircle2, Factory } from "lucide-react";
 import { LIFECYCLE_STAGES, LIFECYCLE_LABELS } from "@/constants";
 import type { LifecycleStage } from "@/types";
 
-const STAGE_ICONS = {
+const STAGE_ICONS: Record<string, any> = {
     SPARK: Sparkles,
-    PLEDGE: Zap,
+    REVIEW: Brain,
+    VOTING: Vote,
+    FUNDING: Zap,
     LOCKED: Lock,
     GREENLIGHT: CheckCircle2,
     PRODUCTION: Factory,

@@ -21,19 +21,21 @@ Brands launch products nobody wants. Consumers can't get the products they do wa
 
 ## Core Concept: The Demand Lifecycle
 
-Every product moves through five verifiable stages:
+Every product moves through seven verifiable stages:
 
 ```
-SPARK → PLEDGE → LOCKED → GREENLIGHT → PRODUCTION
+SPARK → REVIEW → VOTING → FUNDING → LOCKED → GREENLIGHT → PRODUCTION
 ```
 
 | Stage | What it means |
 |---|---|
-| **Spark** | A brand posts a demand prompt. Community starts pitching ideas. |
-| **Pledge** | Consumers back a specific variant with escrowed capital. |
-| **Locked** | Goal reached. Funds held in escrow. Brand commits to produce. |
-| **Greenlight** | Production confirmed. Capital disbursed to brand. |
-| **Production** | Item manufactured and shipped. |
+| **Spark** | A brand posts a demand prompt. Community starts pitching product ideas. |
+| **AI Review** | AI scans the pitch stream to extract and group the top 10 most common concepts. |
+| **Voting** | The top 10 ideas go to a community vote to select the definitive winner. |
+| **Funding** | The winning pitch opens for funding. Consumers back it (like, save, pledge) via pre-orders. |
+| **Locked** | Funding/combination goal reached. Funds held in escrow. Brand commits to produce. |
+| **Greenlight** | Production details confirmed. Capital disbursed to brand. |
+| **Production** | Item manufactured and shipped to backers. |
 
 ---
 

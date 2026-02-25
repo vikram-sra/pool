@@ -1,28 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
+// Simple mono fallback
+const mono = Inter({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "The Demand Pool — Signal. Pledge. Build.",
-  description: "A high-trust marketplace bridging consumer intent and production certainty through financially backed pledges.",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Demand Pool" },
+  title: "Demand Pool — The Premium Pre-order Experience",
+  description: "A high-trust marketplace bridging consumer intent and production certainty.",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Demand Pool" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  viewportFit: "cover", // enable safe-area env() vars
-  themeColor: "#000000",
+  viewportFit: "cover",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white overflow-hidden overscroll-none h-[100dvh] w-[100dvw] m-0 p-0`}>
+      <body className={`${inter.variable} ${mono.variable} antialiased bg-white text-gray-900 overflow-hidden overscroll-none h-[100dvh] w-[100dvw] m-0 p-0`}>
         {children}
       </body>
     </html>

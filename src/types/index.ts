@@ -1,7 +1,7 @@
-export type LifecycleStage = 'SPARK' | 'PLEDGE' | 'LOCKED' | 'GREENLIGHT' | 'PRODUCTION';
+export type LifecycleStage = 'SPARK' | 'REVIEW' | 'VOTING' | 'FUNDING' | 'LOCKED' | 'GREENLIGHT' | 'PRODUCTION';
 export type PledgeState = 'initiated' | 'escrowed' | 'locked';
 export type Category = 'TECH' | 'APPAREL' | 'HOME' | 'RESTAURANTS' | 'LOCAL';
-export type TabId = 'FEED' | 'TRENDS' | 'BRANDS' | 'PROFILE' | 'PITCH';
+export type TabId = 'FEED' | 'PITCH' | 'ECOSYSTEM' | 'PROFILE';
 
 export interface Squad {
     name: string;
@@ -22,6 +22,9 @@ export interface Variant {
 export interface Campaign {
     id: number;
     brand: string;
+    brandLogo?: string;
+    iconPath?: string;
+    iconHex?: string;
     title: string;
     description: string;
     goal: number;
@@ -42,6 +45,9 @@ export interface Campaign {
 
 export interface Brand {
     name: string;
+    brandLogo?: string;
+    iconPath?: string;
+    iconHex?: string;
     totalRaised: string;
     campaigns: number;
     hue: string;
