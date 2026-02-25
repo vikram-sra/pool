@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "../**/*.tsx";
+@source "../**/*.ts";
 
 :root {
   --background: #050505;
@@ -20,6 +22,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+
 body {
   background: #000;
   color: var(--foreground);
@@ -27,6 +30,8 @@ body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: pan-y;
+  /* Dynamic nav clearance: actual nav bar (~96px total with icons+labels+padding) + safe area */
+  --nav-height: calc(96px + var(--safe-bottom));
 }
 
 /* Prevent 300ms tap delay + ghost taps on iOS for all interactive elements */
@@ -40,19 +45,20 @@ textarea {
 }
 
 /* iOS momentum scrolling for all overflow-y-auto containers */
-[class*="overflow-y-auto"] {
+[class*="overflow-y-auto"],
+[class*="overflow-y-scroll"] {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Noise/grain overlaid on very dark background */
+/* Subtle film grain overlay */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  opacity: 0.08;
+  opacity: 0.025;
   pointer-events: none;
   z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 ::selection {
@@ -250,6 +256,11 @@ body::after {
 
 .pt-safe {
   padding-top: max(8px, var(--safe-top));
+}
+
+/* Clear bottom nav on all devices (including notched phones) */
+.pb-nav {
+  padding-bottom: var(--nav-height);
 }
 
 /* ── Full bleed ── */

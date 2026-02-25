@@ -1,0 +1,27 @@
+Prompt 1
+
+We need a system to orchestrate multiple AI agents in a distributed environment. Each agent should handle specific tasks like data processing, decision-making, or external API interactions. The orchestrator must manage agent lifecycles, including spawning, monitoring, and terminating them based on workload. It should support fault tolerance, ensuring agents can recover from failures without disrupting the overall process.
+
+The architecture should use a central coordinator that communicates with agents via message queues or RPCs. Agents run on separate nodes for scalability, with the orchestrator balancing loads and routing tasks dynamically. Include features for dependency management between agents, such as waiting for one agent's output before triggering another. Prioritize modularity so new agent types can be plugged in easily.
+
+For evaluation, implement this as a toy version using open-source tools like Python with libraries for concurrency (e.g., asyncio) and messaging (e.g., RabbitMQ). Simulate a scenario where agents collaborate on a multi-step workflow, like analyzing data and generating reports. Ensure the code is clean, well-documented, and handles edge cases like network delays or agent crashes.
+
+
+===================================================================================================
+
+Prompt 2
+
+
+Build a distributed AI agent orchestrator inspired by Google's Gemini projects. Prioritize requirements like multi-modal input handling (text, images, video), fault tolerance via agent recovery and load balancing, and modularity for plugging in agents for tasks like data analysis or API calls. Emphasize scalability, security (e.g., enterprise access controls), and efficiency in parallel/sequential task execution, drawing from Google's 2025-2026 agentic AI trends.
+
+For production architecture, use Kubernetes for node management, gRPC for inter-agent communication, and Redis for state persistence. Implement a central coordinator with dynamic scaling via auto-scaling groups. Handle high-throughput scenarios with monitoring (e.g., Prometheus) and failover. Provide Python code with full implementation, docs, and tests.
+
+=================================================================================================== 
+
+Prompt 3
+
+Build a distributed AI agent orchestrator with production architecture using Kubernetes for scaling, gRPC for communication, and Redis for state. Prioritize optimal requirements: multi-modal inputs, fault tolerance, load balancing, modularity for task agents (e.g., data analysis, API calls), and efficient parallel/sequential execution.
+
+Define end-to-end use cases: 1) Origin: User query for report generation; Inputs: Text data, images; Orchestration: Spawn agents for data ingest, analysis, synthesis; Output: JSON report. 2) Origin: Real-time monitoring; Inputs: Streaming video; Orchestration: Agents for detection, alerting; Output: Alerts.
+
+Implement detailed testing evals: Unit tests for agents, integration tests for orchestration, and stress testing (simulate 1000+ concurrent tasks with failures). Metrics: Latency (<500ms), Throughput (tasks/sec), Error rate (<1%), Recovery time (<10s). Success criteria: 99% uptime, all tests pass. Final output: Full Python code, docs, test suite, and eval results.

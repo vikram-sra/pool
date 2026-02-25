@@ -17,7 +17,7 @@ export default function BrandsView() {
     if (selectedBrand) {
         const brandCampaigns = CAMPAIGNS.filter((c) => c.brand.toLowerCase().includes(selectedBrand.name.toLowerCase()));
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent pt-safe pointer-events-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-transparent pt-safe pointer-events-auto">
                 <div className="max-w-5xl mx-auto p-5 md:p-10">
                     <button onClick={() => setSelectedBrand(null)} className="flex items-center gap-2 text-white/50 font-black uppercase tracking-widest text-[10px] mb-8 hover:text-white transition-colors group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Ecosystem
@@ -134,7 +134,7 @@ export default function BrandsView() {
 
     // ── BRAND LIST ──
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent pt-safe pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-transparent pt-safe pointer-events-auto">
             {/* Background is handled in page.tsx */}
             <div className="max-w-5xl mx-auto p-5 md:p-10">
                 <header className="mb-10 space-y-5">
