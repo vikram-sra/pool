@@ -10,8 +10,8 @@ export default function ProfileView() {
     const user = USER_PROFILE;
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto no-scrollbar bg-transparent dot-grid pt-safe pointer-events-auto">
-            <div className="max-w-4xl mx-auto p-5 md:p-10 pb-32">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-transparent dot-grid pt-safe pointer-events-auto">
+            <div className="max-w-4xl mx-auto p-5 md:p-10">
                 {!isEditing ? (
                     <div className="space-y-8">
                         <header className="flex justify-between items-end">
@@ -52,7 +52,7 @@ export default function ProfileView() {
                                         <p className="font-semibold uppercase tracking-widest text-[10px] text-white/40 mb-4">{user.tier} • {user.title}</p>
                                         <div className="flex flex-wrap gap-1.5 justify-center md:justify-start">
                                             {user.tags.map((tag) => (
-                                                <span key={tag} className="px-2 py-0.5 bg-white/8 border border-white/10 rounded-md text-[8px] font-black tracking-widest text-white/50">{tag}</span>
+                                                <span key={tag} className="px-2 py-0.5 bg-white/[0.08] border border-white/10 rounded-md text-[8px] font-black tracking-widest text-white/50">{tag}</span>
                                             ))}
                                         </div>
                                     </div>

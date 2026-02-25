@@ -186,8 +186,8 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                             key={t}
                             onClick={() => setSubTab(t)}
                             className={`flex-1 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 ${subTab === t
-                                    ? "bg-[#1C1C1C] text-white shadow-sm"
-                                    : "text-[#1C1C1C]/40"
+                                ? "bg-[#1C1C1C] text-white shadow-sm"
+                                : "text-[#1C1C1C]/40"
                                 }`}
                         >
                             {t === "vote" ? "🗳 Vote" : "💡 Pitch"}
@@ -198,7 +198,7 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
 
             <AnimatePresence mode="wait">
                 {subTab === "vote" ? (
-                    <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar px-4 pb-32 space-y-3">
+                    <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar px-4 pb-nav space-y-3">
                         <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-3">Top Pitches This Week</div>
                         {pitches.sort((a, b) => b.voteCount - a.voteCount).map((p, i) => {
                             const pct = Math.min((p.voteCount / p.threshold) * 100, 100);
@@ -252,7 +252,7 @@ function LandingScreen({ subTab, setSubTab, pitches, onVoteDetail, selectedBrand
                         })}
                     </motion.div>
                 ) : (
-                    <motion.div key="pitch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 px-4 pb-32 space-y-5">
+                    <motion.div key="pitch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 px-4 pb-nav space-y-5">
                         <div className="text-[8px] font-black uppercase tracking-widest text-[#1C1C1C]/25 mb-3">Select a brand & add your idea to the pool</div>
 
                         {/* Brand selector */}
@@ -419,8 +419,8 @@ function PitchPad({ brand, onBack }: { brand: string; onBack: () => void }) {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.4 }}
                             className={`text-[11px] leading-relaxed font-medium ${i === stream.length - 1 && submitted
-                                    ? "text-[#1C1C1C] bg-[#34D399]/10 rounded px-0.5"
-                                    : "text-[#1C1C1C]/60"
+                                ? "text-[#1C1C1C] bg-[#34D399]/10 rounded px-0.5"
+                                : "text-[#1C1C1C]/60"
                                 }`}
                         >
                             {text}
@@ -433,7 +433,7 @@ function PitchPad({ brand, onBack }: { brand: string; onBack: () => void }) {
             </div>
 
             {/* Sticky input bar */}
-            <div className="px-4 pb-32 pt-2 border-t border-[#1C1C1C]/5 bg-[#F5F4F0]">
+            <div className="px-4 pb-nav pt-2 border-t border-[#1C1C1C]/5 bg-[#F5F4F0]">
                 <div className="text-[7px] font-black uppercase tracking-widest text-[#1C1C1C]/20 mb-1.5">Add your idea</div>
                 <div className="flex gap-2">
                     <textarea
@@ -492,7 +492,7 @@ function VoteDetail({ pitch, onBack, onVote }: { pitch: ExtractedPitch; onBack: 
                 <span className="font-black text-[13px] text-[#1C1C1C] uppercase tracking-tight">Vote</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar px-4 pt-4 pb-32 space-y-4">
+            <div className="flex-1 overflow-y-auto no-scrollbar px-4 pt-4 pb-nav space-y-4">
                 {/* Brand + urgency */}
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black text-white" style={{ backgroundColor: pitch.brandHue }}>

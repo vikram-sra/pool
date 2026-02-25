@@ -11,7 +11,7 @@ export const CAMPAIGNS: Campaign[] = [
         pledged: 18450,
         emoji: '🥾',
         modelType: 'shoe',
-        color: '#34D399',
+        color: '#FF6B2C',
         deadline: '12 DAYS',
         squadsCount: '4.2k',
         category: 'APPAREL',
@@ -21,9 +21,9 @@ export const CAMPAIGNS: Campaign[] = [
         squads: [{ name: 'Sneakerheads', amount: '+$4.2k', members: 820 }, { name: 'The 90s Club', amount: '+$2.8k', members: 420 }],
         image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=400',
         variants: [
-            { id: 'v1', label: 'Neon Green', type: 'color', value: 'green', hex: '#34D399', votes: 4210 },
-            { id: 'v2', label: 'Sunset Orange', type: 'color', value: 'orange', hex: '#FF6B00', votes: 2380 },
-            { id: 'v3', label: 'Cyber Blue', type: 'color', value: 'blue', hex: '#38BDF8', votes: 1890 },
+            { id: 'v1', label: 'Neon Orange', type: 'color', value: 'orange', hex: '#FF6B2C', votes: 4210 },
+            { id: 'v2', label: 'Hot Pink', type: 'color', value: 'pink', hex: '#FF2D87', votes: 2380 },
+            { id: 'v3', label: 'Electric Volt', type: 'color', value: 'yellow', hex: '#CCFF00', votes: 1890 },
         ],
     },
     {
@@ -339,7 +339,7 @@ export const CAMPAIGNS: Campaign[] = [
 
 // ── BRANDS ──
 export const BRANDS: Brand[] = [
-    { name: 'Nike', totalRaised: '$4.2M', campaigns: 12, hue: '#34D399', joinedYear: 2019, description: 'Global athletic innovation. From concept to production with verified consumer demand.' },
+    { name: 'Nike', totalRaised: '$4.2M', campaigns: 12, hue: '#FF6B2C', joinedYear: 2019, description: 'Global athletic innovation. From concept to production with verified consumer demand.' },
     { name: 'Sony', totalRaised: '$2.1M', campaigns: 5, hue: '#38BDF8', joinedYear: 2020, description: 'Reimagining consumer electronics through community-backed co-creation.' },
     { name: 'Leica', totalRaised: '$8.5M', campaigns: 3, hue: '#FBBF24', joinedYear: 2021, description: 'Precision optical engineering, financed by the photographers who demand it.' },
     { name: 'Arcteryx', totalRaised: '$1.1M', campaigns: 4, hue: '#FF3D00', joinedYear: 2022, description: 'Pushing technical outerwear boundaries via demand-verified prototyping.' },
@@ -373,7 +373,7 @@ export const USER_PROFILE: UserProfile = {
     assetsEscrowed: '$4.5K',
     activeSquads: 6,
     pledges: [
-        { brand: 'Nike Verified', title: 'Retro 95 Neon', amount: '$100', status: 'Locked', color: '#34D399' },
+        { brand: 'Nike Verified', title: 'Retro 95 Neon', amount: '$100', status: 'Locked', color: '#FF6B2C' },
         { brand: 'Sony Verified', title: 'Walkman Cyber', amount: '$350', status: 'Escrow', color: '#38BDF8' },
         { brand: 'Leica Verified', title: 'Ghost Edition', amount: '$500', status: 'Greenlit', color: '#FBBF24' },
         { brand: 'Nothing', title: 'Ear (Zero)', amount: '$75', status: 'Locked', color: '#F43F5E' },

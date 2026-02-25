@@ -29,15 +29,16 @@ export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
     currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen, dragProgressRef,
 }: FeedViewProps) {
-    const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>(() => {
-        try { return JSON.parse(localStorage.getItem('dp-pledges') ?? '{}'); } catch { return {}; }
-    });
-    const [liked, setLiked] = useState<Record<number, boolean>>(() => {
-        try { return JSON.parse(localStorage.getItem('dp-liked') ?? '{}'); } catch { return {}; }
-    });
-    const [saved, setSaved] = useState<Record<number, boolean>>(() => {
-        try { return JSON.parse(localStorage.getItem('dp-saved') ?? '{}'); } catch { return {}; }
-    });
+    const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>({});
+    const [liked, setLiked] = useState<Record<number, boolean>>({});
+    const [saved, setSaved] = useState<Record<number, boolean>>({});
+
+    // Hydrate from localStorage after mount (avoids SSR mismatch)
+    useEffect(() => {
+        try { setPledgeStates(JSON.parse(localStorage.getItem('dp-pledges') ?? '{}')); } catch { }
+        try { setLiked(JSON.parse(localStorage.getItem('dp-liked') ?? '{}')); } catch { }
+        try { setSaved(JSON.parse(localStorage.getItem('dp-saved') ?? '{}')); } catch { }
+    }, []);
     const [activeSheet, setActiveSheet] = useState<"none" | "specs" | "squads" | "comments">("none");
     const [showModal, setShowModal] = useState(false);
     const [feedTab, setFeedTab] = useState<"foryou" | "trending">("foryou");
@@ -143,8 +144,8 @@ export default function FeedView({
             const recentDy = lastMoveY - endY;
             const velocity = dt > 0 ? Math.abs(recentDy) / dt : 0; // px/ms
 
-            const isFlick = velocity > 0.4 && Math.abs(totalDist) > 20;
-            const isSwipe = Math.abs(totalDist) > 80;
+            const isFlick = velocity > 0.3 && Math.abs(totalDist) > 15;
+            const isSwipe = Math.abs(totalDist) > 50;
 
             if (isFlick || isSwipe) {
                 totalDist > 0 ? handleNext() : handlePrev();
@@ -232,7 +233,7 @@ export default function FeedView({
             </div>
 
             {/* ── TOP BAR ── */}
-            <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-500 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
+            <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-150 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
                 <div className="flex items-center justify-between px-3 py-2">
                     <div className="flex items-center glass-dark rounded-full p-0.5">
                         {(["foryou", "trending"] as const).map(tab => (
@@ -256,7 +257,7 @@ export default function FeedView({
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ delay: 0.4 }}
+                        transition={{ duration: 0.15 }}
                         onClick={() => setIsZenMode(false)}
                         className="absolute top-14 right-4 z-50 w-9 h-9 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center pointer-events-auto"
                     >
@@ -284,7 +285,7 @@ export default function FeedView({
             </AnimatePresence>
 
             {/* ── RIGHT SIDEBAR ── */}
-            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-4 transition-all duration-500 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "88px" }}>
+            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-4 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 16px)" }}>
                 <div className="relative mb-1">
                     <div className="w-11 h-11 rounded-full border border-white/20 glass flex items-center justify-center font-bold text-[12px] text-white shadow-[0_0_15px_rgba(0,0,0,0.5)]" style={{ background: `linear-gradient(135deg, ${currentCampaign.color}50, transparent)` }}>
                         {currentCampaign.brand.charAt(0)}
@@ -297,7 +298,7 @@ export default function FeedView({
             </div>
 
             {/* ── BOTTOM INFO ── */}
-            <div className={`absolute bottom-[70px] left-0 right-[56px] z-20 px-3 transition-all duration-500 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}>
+            <div className={`absolute left-0 right-[56px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) - 2px)" }}>
                 {/* mode="wait" ensures old content fully exits before new content enters,
                     preventing the ghost where both campaign infos overlap mid-transition */}
                 <AnimatePresence mode="wait">

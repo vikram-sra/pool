@@ -1,19 +1,13 @@
 // ── Scroll & Gesture Thresholds ──
-export const SCROLL_COOLDOWN_MS = 700;
-export const SWIPE_COOLDOWN_MS = 400;
-export const SWIPE_DISTANCE_THRESHOLD = 120;
-export const SWIPE_VELOCITY_THRESHOLD = 0.5;
-export const SWIPE_MIN_DISTANCE = 50;
-export const WHEEL_DELTA_THRESHOLD = 60;
+export const SCROLL_COOLDOWN_MS = 350;
+export const SWIPE_COOLDOWN_MS = 250;
+export const SWIPE_DISTANCE_THRESHOLD = 80;
+export const SWIPE_VELOCITY_THRESHOLD = 0.4;
+export const SWIPE_MIN_DISTANCE = 40;
+export const WHEEL_DELTA_THRESHOLD = 40;
 
 // ── 3D Scene ──
-export const MODEL_Y_SPREAD = 8;
-export const MODEL_LERP_FACTOR = 0.08;
-export const MODEL_SCALE_LERP = 0.1;
 export const MODEL_ACTIVE_SCALE = 0.65;
-export const MODEL_HIDDEN_SCALE = 0.001;
-export const MODEL_VISIBLE_THRESHOLD = 0.01;
-export const MODEL_RENDER_WINDOW = 2;
 
 // ── Camera ──
 export const CAMERA_POSITION: [number, number, number] = [0, 0, 4];

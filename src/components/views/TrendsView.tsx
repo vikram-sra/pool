@@ -30,7 +30,7 @@ export default function TrendsView() {
     if (selectedCampaign) {
         const progress = (selectedCampaign.pledged / selectedCampaign.goal) * 100;
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent pt-safe pointer-events-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-transparent pt-safe pointer-events-auto">
                 <div className="max-w-4xl mx-auto p-5 md:p-10">
                     <button onClick={() => setSelectedCampaign(null)} className="flex items-center gap-2 text-white/50 font-black uppercase tracking-widest text-[10px] mb-8 hover:text-white transition-colors group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back
@@ -100,7 +100,7 @@ export default function TrendsView() {
 
     // ── MAIN TRENDS VIEW ──
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[100px] no-scrollbar bg-transparent pt-safe pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-transparent pt-safe pointer-events-auto">
             <div className="max-w-7xl mx-auto p-5 md:p-10">
 
                 {/* Header */}
@@ -180,17 +180,16 @@ export default function TrendsView() {
 
                         {/* Campaign Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                            <AnimatePresence mode="popLayout">
+                            <AnimatePresence mode="wait">
                                 {filteredCampaigns.map((campaign, i) => {
                                     const pct = Math.round((campaign.pledged / campaign.goal) * 100);
                                     return (
                                         <motion.div
                                             key={campaign.id}
-                                            layout
-                                            initial={{ opacity: 0, y: 30 }}
+                                            initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            transition={{ delay: i * 0.04, type: "spring", stiffness: 200, damping: 20 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ delay: i * 0.03, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                                             className="group relative cursor-pointer"
                                             onClick={() => setSelectedCampaign(campaign)}
                                         >
