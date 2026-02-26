@@ -18,7 +18,7 @@ export default function EcosystemView() {
     if (selectedBrand) {
         const brandCampaigns = CAMPAIGNS.filter((c) => c.brand.toLowerCase().includes(selectedBrand.name.toLowerCase()));
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar bg-gray-50 pt-safe pointer-events-auto z-10">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-nav no-scrollbar glass pt-safe pointer-events-auto z-10">
                 <div className="max-w-5xl mx-auto px-4 md:px-8 pt-3 pb-4">
                     <button
                         onClick={() => setSelectedBrand(null)}
@@ -29,7 +29,7 @@ export default function EcosystemView() {
                     </button>
 
                     {/* Brand Hero */}
-                    <div className="bg-white rounded-[var(--radius-xl)] border border-gray-100 p-6 md:p-10 mb-6" style={{ boxShadow: "var(--shadow-card)" }}>
+                    <div className="glass-heavy rounded-[var(--radius-xl)] border border-gray-100 p-6 md:p-10 mb-6" style={{ boxShadow: "var(--shadow-card)" }}>
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                             <div className="w-16 h-16 md:w-20 md:h-20 rounded-[var(--radius-lg)] flex items-center justify-center border border-gray-100 bg-gray-50/50 shadow-sm p-3 shrink-0">
                                 {selectedBrand.iconPath ? (
@@ -62,7 +62,7 @@ export default function EcosystemView() {
                             { label: "Campaigns", value: String(selectedBrand.campaigns) },
                             { label: "Active Now", value: String(brandCampaigns.length) },
                         ].map((s, i) => (
-                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-[var(--radius-lg)] p-4 md:p-6 border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
+                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-heavy rounded-[var(--radius-lg)] p-4 md:p-6 border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
                                 <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{s.label}</div>
                                 <div className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">{s.value}</div>
                             </motion.div>
@@ -95,7 +95,7 @@ export default function EcosystemView() {
                         {activeSubTab === "funding" && (
                             <motion.div key="funding" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
                                 {brandCampaigns.length > 0 ? brandCampaigns.map((c) => (
-                                    <div key={c.id} className="relative bg-white rounded-[var(--radius-lg)] border border-gray-100 p-5 md:p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer group">
+                                    <div key={c.id} className="relative glass-heavy rounded-[var(--radius-lg)] border border-gray-100 p-5 md:p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer group">
                                         <div className="flex justify-between items-start mb-3">
                                             <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Funding Active</div>
                                             <div className="bg-black/5 text-gray-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-gray-200/50">
@@ -124,7 +124,7 @@ export default function EcosystemView() {
     const topVoting = CAMPAIGNS.filter(c => c.lifecycle === "VOTING").slice(0, 3);
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar bg-[#F9FAFB] pt-safe pointer-events-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar glass pt-safe pointer-events-auto z-10">
             <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
 
                 {/* Header */}
@@ -140,14 +140,14 @@ export default function EcosystemView() {
 
                     {/* LEFT COL: Live Network Stats */}
                     <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-                        <div className="bg-white p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
+                        <div className="glass-heavy p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
                             <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
                                 <Zap size={14} />
                             </div>
                             <div className="text-[11px] font-bold tracking-wider uppercase text-gray-400 mb-1">Total Escrowed</div>
                             <div className="text-3xl font-bold tracking-tight text-gray-900">$24.8M</div>
                         </div>
-                        <div className="bg-white p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
+                        <div className="glass-heavy p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
                             <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
                                 <Users size={14} />
                             </div>
@@ -156,7 +156,7 @@ export default function EcosystemView() {
                         </div>
 
                         {/* Top Funding Trends */}
-                        <div className="col-span-2 bg-white rounded-[var(--radius-xl)] border border-gray-100 p-5" style={{ boxShadow: "var(--shadow-card)" }}>
+                        <div className="col-span-2 glass-heavy rounded-[var(--radius-xl)] border border-gray-100 p-5" style={{ boxShadow: "var(--shadow-card)" }}>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -180,7 +180,7 @@ export default function EcosystemView() {
                         </div>
 
                         {/* Top Voting Trends */}
-                        <div className="col-span-2 bg-white rounded-[var(--radius-xl)] border border-gray-100 p-5" style={{ boxShadow: "var(--shadow-card)" }}>
+                        <div className="col-span-2 glass-heavy rounded-[var(--radius-xl)] border border-gray-100 p-5" style={{ boxShadow: "var(--shadow-card)" }}>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <Target size={14} className="text-purple-500" />
@@ -205,7 +205,7 @@ export default function EcosystemView() {
                     </div>
 
                     {/* RIGHT COL: Brands Directory */}
-                    <div className="bg-white rounded-[var(--radius-xl)] border border-gray-100 flex flex-col overflow-hidden lg:h-[calc(100vh-180px)]" style={{ boxShadow: "var(--shadow-card)" }}>
+                    <div className="glass-heavy rounded-[var(--radius-xl)] border border-gray-100 flex flex-col overflow-hidden lg:h-[calc(100vh-180px)]" style={{ boxShadow: "var(--shadow-card)" }}>
                         <div className="p-5 border-b border-gray-100 glass-heavy sticky top-0 z-10">
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-900">Verified Brands</span>

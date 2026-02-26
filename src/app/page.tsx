@@ -57,7 +57,7 @@ export default function Home() {
     <div className="fixed inset-0 w-[100dvw] h-[100dvh] bg-[#F9FAFB] overflow-hidden">
 
       {/* 3D CANVAS — conditionally visible based on tab */}
-      <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${currentTab === "FEED" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+      <div className={`absolute inset-0 z-10 transition-all duration-500 ${currentTab === "FEED" ? "opacity-100 pointer-events-auto filter-none scale-100" : "opacity-60 pointer-events-none blur-md scale-[0.98]"}`}>
         <div className="absolute inset-0 bg-white">
           <ErrorBoundary>
             <Suspense fallback={null}>
