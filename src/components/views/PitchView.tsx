@@ -101,9 +101,9 @@ export default function PitchView() {
 
     useEffect(() => { setTod(getTimeOfDay()); }, []);
     const theme = TIME_THEMES[tod];
-    const isNight = tod === "night" || tod === "sunset";
-    const textColor = isNight ? "text-white" : "text-gray-900";
-    const subTextColor = isNight ? "text-white/70" : "text-gray-500";
+    const isNight = false;
+    const textColor = "text-gray-900";
+    const subTextColor = "text-gray-500";
 
     const goToPad = (brand: string) => { setSelectedBrand(brand); setScreen("pad"); };
     const goToDetail = (pitch: ExtractedPitch) => { setDetailPitch(pitch); setScreen("detail"); };
@@ -117,7 +117,7 @@ export default function PitchView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col overflow-hidden pointer-events-auto z-10 glass"
+            className="absolute inset-0 flex flex-col overflow-hidden pointer-events-auto z-10 bg-white"
         >
             {/* Subtle floating ambient dots instead of large blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">

@@ -10,7 +10,7 @@ export default function ProfileView() {
     const user = USER_PROFILE;
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar glass pt-safe pointer-events-auto z-10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar bg-gray-50 pt-safe pointer-events-auto z-10">
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-3 pb-4">
                 {!isEditing ? (
                     <div className="space-y-6">
@@ -26,7 +26,7 @@ export default function ProfileView() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 aria-label="Edit profile"
-                                className="glass-surface rounded-[var(--radius-sm)] p-3 border border-gray-200 text-gray-900 hover:glass shadow-sm transition-all duration-200"
+                                className="bg-white rounded-[var(--radius-sm)] p-3 border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm transition-all duration-200"
                                 style={{ minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
                             >
                                 <Edit3 size={18} strokeWidth={2.5} />
@@ -34,7 +34,7 @@ export default function ProfileView() {
                         </header>
 
                         {/* Profile Card */}
-                        <div className="glass-heavy rounded-[var(--radius-xl)] p-6 md:p-10 border border-gray-100 shadow-sm">
+                        <div className="bg-white rounded-[var(--radius-xl)] p-6 md:p-10 border border-gray-100 shadow-sm">
                             <div className="flex flex-col md:flex-row items-center gap-8">
                                 {/* Avatar */}
                                 <div className="relative shrink-0">
@@ -65,7 +65,7 @@ export default function ProfileView() {
                                 { label: "Pledges", value: String(user.pledges.length).padStart(2, "0"), icon: Zap, color: "#059669", description: "Products you've backed" },
                                 { label: "Rank", value: "#142", icon: Award, color: "#D97706", description: "Your position" },
                             ].map((s, i) => (
-                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="glass-heavy rounded-[var(--radius-lg)] p-5 border border-gray-100 shadow-sm">
+                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="bg-white rounded-[var(--radius-lg)] p-5 border border-gray-100 shadow-sm">
                                     <div className="flex items-center gap-2 mb-2">
                                         <s.icon size={14} style={{ color: s.color }} />
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{s.label}</span>
@@ -89,7 +89,7 @@ export default function ProfileView() {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.2 + idx * 0.08 }}
-                                        className="glass-heavy rounded-[var(--radius-lg)] border border-gray-100 p-5 flex justify-between items-center hover:shadow-md transition-all cursor-pointer group"
+                                        className="bg-white rounded-[var(--radius-lg)] border border-gray-100 p-5 flex justify-between items-center hover:shadow-md transition-all cursor-pointer group"
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: pledge.color }} />
@@ -128,7 +128,7 @@ export default function ProfileView() {
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: 0.3 + i * 0.06 }}
-                                        className={`glass-heavy rounded-[var(--radius-lg)] border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-2 text-center ${!badge.unlocked ? "opacity-30 grayscale" : ""}`}
+                                        className={`bg-white rounded-[var(--radius-lg)] border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-2 text-center ${!badge.unlocked ? "opacity-30 grayscale" : ""}`}
                                     >
                                         <span className="text-2xl mb-1">{badge.emoji}</span>
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">{badge.label}</span>
@@ -149,7 +149,7 @@ export default function ProfileView() {
                             >Save</button>
                         </header>
                         <div className="space-y-6 max-w-2xl">
-                            <div className="glass-heavy rounded-[var(--radius-xl)] border border-gray-100 p-8 flex flex-col items-center gap-5 shadow-sm">
+                            <div className="bg-white rounded-[var(--radius-xl)] border border-gray-100 p-8 flex flex-col items-center gap-5 shadow-sm">
                                 <div className="relative group cursor-pointer">
                                     <div className="w-28 h-28 rounded-[var(--radius-xl)] bg-gray-100 flex items-center justify-center text-4xl font-bold text-gray-900 border border-gray-200 shadow-sm transition-transform group-hover:scale-105">
                                         {user.initials}
@@ -160,7 +160,7 @@ export default function ProfileView() {
                                 </div>
                                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tap to upload</p>
                             </div>
-                            <div className="space-y-5 glass-heavy p-8 rounded-[var(--radius-xl)] border border-gray-100 shadow-sm">
+                            <div className="space-y-5 bg-white p-8 rounded-[var(--radius-xl)] border border-gray-100 shadow-sm">
                                 {[{ label: "Public Alias", val: user.name }, { label: "Email", val: user.email }, { label: "Bio", val: user.bio }].map((field, i) => (
                                     <div key={i}>
                                         <label className="block text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">{field.label}</label>
