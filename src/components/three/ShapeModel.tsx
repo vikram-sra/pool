@@ -69,11 +69,14 @@ const MODEL_FIT: Record<string, number> = {
 interface ShapeModelProps {
     type: string;
     color: string;
+    isZenMode?: boolean;
+    zenYOffset?: number;
+    zenXOffset?: number;
     onPointerDown?: () => void;
     onToggleZen?: () => void;
 }
 
-export default function ShapeModel({ type, color, onPointerDown, onToggleZen }: ShapeModelProps) {
+export default function ShapeModel({ type, color, isZenMode, zenYOffset = 0, zenXOffset = 0, onPointerDown, onToggleZen }: ShapeModelProps) {
     const groupRef = useRef<THREE.Group>(null);
     const time = useRef(0);
     const pointerMoved = useRef(false);
@@ -81,10 +84,13 @@ export default function ShapeModel({ type, color, onPointerDown, onToggleZen }: 
     const targetScale = MODEL_ACTIVE_SCALE * fitScale;
 
     useFrame((_state, delta) => {
-        time.current += delta;
+        // Slow-mo in zen mode: 0.25x speed
+        const speed = isZenMode ? 0.25 : 1;
+        time.current += delta * speed;
         if (!groupRef.current) return;
-        groupRef.current.position.x = Math.sin(time.current * 0.5) * 0.05;
-        groupRef.current.position.y = Math.sin(time.current * 2) * 0.05;
+        const amplitude = isZenMode ? 0.02 : 0.05;
+        groupRef.current.position.x = Math.sin(time.current * 0.5) * amplitude + zenXOffset;
+        groupRef.current.position.y = Math.sin(time.current * 2) * amplitude + zenYOffset;
         _tempVec.set(targetScale, targetScale, targetScale);
         groupRef.current.scale.lerp(_tempVec, 0.12);
     });
@@ -118,58 +124,167 @@ export default function ShapeModel({ type, color, onPointerDown, onToggleZen }: 
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.8} roughness={0.3} metalness={0.5} />
     );
 
-    const handlePointerDown = (e: THREE.Event) => {
-        (e as any).stopPropagation();
+    const pointerStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+    const handlePointerDown = (e: any) => {
+        e.stopPropagation();
+        pointerStart.current = { x: e.clientX ?? e.pageX ?? 0, y: e.clientY ?? e.pageY ?? 0 };
         pointerMoved.current = false;
         if (onPointerDown) onPointerDown();
     };
-    const handlePointerMove = () => { pointerMoved.current = true; };
-    const handleClick = (e: THREE.Event) => {
-        (e as any).stopPropagation();
+    const handlePointerMove = (e: any) => {
+        const dx = (e.clientX ?? e.pageX ?? 0) - pointerStart.current.x;
+        const dy = (e.clientY ?? e.pageY ?? 0) - pointerStart.current.y;
+        // Only set moved if distance > 5px threshold (prevents false positives from tiny touch jitter)
+        if (Math.sqrt(dx * dx + dy * dy) > 5) pointerMoved.current = true;
+    };
+    const handleClick = (e: any) => {
+        e.stopPropagation();
         if (!pointerMoved.current && onToggleZen) onToggleZen();
     };
     const props = { onPointerDown: handlePointerDown, onPointerMove: handlePointerMove, onClick: handleClick };
 
     const renderModel = () => {
         switch (type) {
-            // ── SHOE (Nike Retro 95 Neon) ── Chrome spiked sneaker
+            // ── SHOE ── Sneaker with hollow ankle, curved shapes, narrowing front
             case "shoe": {
-                const chromeMat = <meshStandardMaterial color="#E8E8E8" roughness={0.02} metalness={1.0} envMapIntensity={2.5} />;
-                const spikeMat = <meshStandardMaterial color="#CCCCCC" roughness={0.05} metalness={1.0} envMapIntensity={2.0} />;
-                const spikePositions: [number, number, number][] = [
-                    [-0.3, 0.2, 0.42], [-0.1, 0.3, 0.42], [0.1, 0.35, 0.42], [0.3, 0.25, 0.42], [0.5, 0.1, 0.4],
-                    [-0.3, 0.2, -0.42], [-0.1, 0.3, -0.42], [0.1, 0.35, -0.42], [0.3, 0.25, -0.42], [0.5, 0.1, -0.4],
-                    [-0.4, 0.42, 0], [-0.2, 0.47, 0], [0.0, 0.47, 0], [0.2, 0.42, 0], [0.4, 0.32, 0],
-                    [0.7, 0.2, 0.2], [0.7, 0.2, -0.2], [0.7, 0.35, 0], [0.8, 0.1, 0],
-                    [-0.7, 0.0, 0.25], [-0.7, 0.0, -0.25], [-0.8, 0.05, 0], [-0.6, 0.15, 0.35], [-0.6, 0.15, -0.35],
-                ];
+                const soleMat = <meshStandardMaterial color="#F0F0F0" roughness={0.65} metalness={0.0} />;
+                const swooshMat = <meshStandardMaterial color={color} roughness={0.3} metalness={0.15} emissive={color} emissiveIntensity={0.1} />;
+                const interiorMat = <meshStandardMaterial color="#1a1a1a" roughness={0.9} metalness={0.0} side={THREE.BackSide} />;
+                const collarMat = <meshStandardMaterial color="#E8E8E8" roughness={0.4} metalness={0.1} />;
+
+                // Sole — narrowing toward toe with curves
+                const soleShape = React.useMemo(() => {
+                    const s = new THREE.Shape();
+                    s.moveTo(0.65, -0.06);
+                    s.lineTo(-0.5, -0.06);
+                    // Narrow toe curve
+                    s.quadraticCurveTo(-0.85, -0.04, -0.92, 0.06);
+                    s.quadraticCurveTo(-0.88, 0.18, -0.7, 0.2);
+                    // Top of sole — slight wave
+                    s.quadraticCurveTo(-0.3, 0.24, 0.0, 0.22);
+                    s.quadraticCurveTo(0.3, 0.20, 0.65, 0.22);
+                    // Heel back
+                    s.quadraticCurveTo(0.78, 0.2, 0.78, 0.08);
+                    s.quadraticCurveTo(0.78, -0.04, 0.65, -0.06);
+                    return s;
+                }, []);
+
+                // Upper — narrowing front, wavy collar line, open at top for foot hole
+                const upperShape = React.useMemo(() => {
+                    const s = new THREE.Shape();
+                    s.moveTo(-0.68, 0.2);
+                    // Toe box — narrow rounded curve
+                    s.quadraticCurveTo(-0.82, 0.28, -0.76, 0.38);
+                    s.quadraticCurveTo(-0.68, 0.46, -0.5, 0.48);
+                    // Vamp rising — gentle wave
+                    s.quadraticCurveTo(-0.3, 0.52, -0.15, 0.56);
+                    // Tongue area 
+                    s.quadraticCurveTo(-0.05, 0.68, 0.1, 0.72);
+                    // Collar dip (ankle opening shape)
+                    s.quadraticCurveTo(0.2, 0.68, 0.3, 0.64);
+                    s.quadraticCurveTo(0.45, 0.58, 0.58, 0.52);
+                    // Heel counter — curves back up slightly
+                    s.quadraticCurveTo(0.7, 0.46, 0.72, 0.32);
+                    s.lineTo(0.72, 0.2);
+                    s.lineTo(-0.68, 0.2);
+                    return s;
+                }, []);
+
+                // Narrowing extrude — wider at heel, narrower at toe
+                const upperExtrude = { depth: 0.6, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 4 };
+                const soleExtrude = { depth: 0.72, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.04, bevelSegments: 3 };
+
                 return (
-                    <group position={[0, -0.2, 0]} rotation={[0.15, -0.5, 0.05]} {...props}>
-                        <mesh position={[0, -0.55, 0]}><boxGeometry args={[2.2, 0.3, 1.0]} />{chromeMat}</mesh>
-                        <mesh position={[0, -0.35, 0]}><boxGeometry args={[2.1, 0.2, 0.95]} />{chromeMat}</mesh>
-                        <mesh position={[0.4, -0.35, 0]}><capsuleGeometry args={[0.08, 0.5, 8, 16]} />{glassMat}</mesh>
-                        <mesh position={[-0.4, -0.35, 0]}><capsuleGeometry args={[0.06, 0.35, 8, 16]} />{glassMat}</mesh>
-                        <mesh position={[0, 0.05, 0]} rotation={[0, 0, 0.05]}><capsuleGeometry args={[0.38, 1.3, 16, 32]} />{chromeMat}</mesh>
-                        <mesh position={[-0.75, -0.15, 0]} scale={[0.45, 0.35, 0.8]}><sphereGeometry args={[1, 16, 16, 0, Math.PI]} />{chromeMat}</mesh>
-                        <mesh position={[0.78, 0.05, 0]} scale={[0.3, 0.55, 0.65]}><boxGeometry />{chromeMat}</mesh>
-                        <mesh position={[-0.1, 0.5, 0]} rotation={[0, 0, 0.25]} scale={[0.35, 0.25, 0.45]}><boxGeometry />{chromeMat}</mesh>
-                        <mesh position={[0.2, 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.3, 0.05, 8, 24]} />{chromeMat}</mesh>
-                        <mesh position={[0, 0.05, 0.43]} rotation={[0, 0, -0.12]}><boxGeometry args={[1.1, 0.06, 0.02]} />{glowMat}</mesh>
-                        <mesh position={[0, 0.05, -0.43]} rotation={[0, 0, -0.12]}><boxGeometry args={[1.1, 0.06, 0.02]} />{glowMat}</mesh>
-                        {spikePositions.map(([x, y, z], i) => (
-                            <mesh key={i} position={[x, y, z]} rotation={[z > 0 ? 0 : Math.PI, 0, 0]}>
-                                <coneGeometry args={[0.04, 0.18, 6]} />{spikeMat}
-                            </mesh>
-                        ))}
-                        {Array.from({ length: 10 }).map((_, i) => (
-                            <group key={`s${i}`}>
-                                <mesh position={[(i - 4.5) * 0.2, -0.7, 0.45]}><coneGeometry args={[0.03, 0.1, 4]} />{spikeMat}</mesh>
-                                <mesh position={[(i - 4.5) * 0.2, -0.7, -0.45]}><coneGeometry args={[0.03, 0.1, 4]} />{spikeMat}</mesh>
+                    <group position={[0, -0.25, 0]} rotation={[0.08, -0.5, 0]} {...props}>
+                        {/* Sole */}
+                        <mesh position={[0, 0, -0.36]} castShadow>
+                            <extrudeGeometry args={[soleShape, soleExtrude]} />
+                            {soleMat}
+                        </mesh>
+
+                        {/* Wavy midsole accent */}
+                        <mesh position={[0, 0.14, 0]}>
+                            <boxGeometry args={[1.45, 0.035, 0.7]} />
+                            {swooshMat}
+                        </mesh>
+
+                        {/* Air windows */}
+                        <mesh position={[0.2, 0.07, 0.28]} rotation={[Math.PI / 2, 0, 0]}>
+                            <capsuleGeometry args={[0.035, 0.18, 6, 8]} />
+                            {glassMat}
+                        </mesh>
+                        <mesh position={[0.2, 0.07, -0.28]} rotation={[Math.PI / 2, 0, 0]}>
+                            <capsuleGeometry args={[0.035, 0.18, 6, 8]} />
+                            {glassMat}
+                        </mesh>
+
+                        {/* Upper body */}
+                        <mesh position={[0, 0, -0.3]} castShadow>
+                            <extrudeGeometry args={[upperShape, upperExtrude]} />
+                            {mat}
+                        </mesh>
+
+                        {/* Interior darkness (visible through ankle hole) */}
+                        <mesh position={[0, 0, -0.3]}>
+                            <extrudeGeometry args={[upperShape, { ...upperExtrude, depth: 0.58 }]} />
+                            {interiorMat}
+                        </mesh>
+
+                        {/* Ankle opening rim — torus ring for the foot hole, oriented UP */}
+                        <mesh position={[0.3, 0.61, 0]} rotation={[Math.PI / 2, 0.15, 0]}>
+                            <torusGeometry args={[0.18, 0.045, 12, 32]} />
+                            {collarMat}
+                        </mesh>
+
+                        {/* Inner collar shadow ring */}
+                        <mesh position={[0.3, 0.61, 0]} rotation={[Math.PI / 2, 0.15, 0]}>
+                            <torusGeometry args={[0.14, 0.03, 8, 24]} />
+                            {interiorMat}
+                        </mesh>
+
+                        {/* Heel counter */}
+                        <mesh position={[0.62, 0.3, 0]} scale={[0.16, 0.18, 0.58]}>
+                            <boxGeometry />{accentMat}
+                        </mesh>
+
+                        {/* Heel pull tab */}
+                        <mesh position={[0.68, 0.44, 0]} scale={[0.05, 0.08, 0.15]}>
+                            <boxGeometry />{swooshMat}
+                        </mesh>
+
+                        {/* Swoosh — left (curved box) */}
+                        <mesh position={[0.0, 0.33, 0.34]} rotation={[0, 0, -0.12]}>
+                            <boxGeometry args={[0.65, 0.04, 0.012]} />{swooshMat}
+                        </mesh>
+                        {/* Swoosh — right */}
+                        <mesh position={[0.0, 0.33, -0.34]} rotation={[0, 0, -0.12]}>
+                            <boxGeometry args={[0.65, 0.04, 0.012]} />{swooshMat}
+                        </mesh>
+
+                        {/* Lace eyelets */}
+                        {[-0.3, -0.12, 0.04, 0.18].map((x, i) => (
+                            <group key={`ey${i}`}>
+                                <mesh position={[x, 0.5 + i * 0.025, 0.16]} rotation={[Math.PI / 2, 0, 0]}>
+                                    <torusGeometry args={[0.018, 0.005, 4, 8]} />{accentMat}
+                                </mesh>
+                                <mesh position={[x, 0.5 + i * 0.025, -0.16]} rotation={[Math.PI / 2, 0, 0]}>
+                                    <torusGeometry args={[0.018, 0.005, 4, 8]} />{accentMat}
+                                </mesh>
                             </group>
                         ))}
-                        {[-0.3, -0.1, 0.1, 0.3].map((x, i) => (
-                            <mesh key={`e${i}`} position={[x, 0.4, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.04, 0.015, 4, 12]} />{chromeMat}</mesh>
+
+                        {/* Laces */}
+                        {[-0.2, 0.0, 0.12].map((x, i) => (
+                            <mesh key={`lc${i}`} position={[x, 0.52 + i * 0.025, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                                <boxGeometry args={[0.012, 0.28, 0.006]} />{whiteMat}
+                            </mesh>
                         ))}
+
+                        {/* Tongue */}
+                        <mesh position={[-0.08, 0.6, 0.04]} rotation={[-0.2, 0, 0.08]} scale={[0.2, 0.1, 0.22]}>
+                            <boxGeometry />{mat}
+                        </mesh>
                     </group>
                 );
             }

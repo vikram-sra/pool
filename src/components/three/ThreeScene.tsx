@@ -13,12 +13,15 @@ interface ThreeSceneProps {
     currentCampaign: Campaign;
     currentIndex: number;
     currentTab: TabId;
+    isZenMode?: boolean;
+    zenYOffset?: number;
+    zenXOffset?: number;
     onInteractionStart: () => void;
     dragProgressRef: React.MutableRefObject<number>;
     onToggleZen?: () => void;
 }
 
-export default function ThreeScene({ currentCampaign, currentIndex, currentTab, onInteractionStart, dragProgressRef, onToggleZen }: ThreeSceneProps) {
+export default function ThreeScene({ currentCampaign, currentIndex, currentTab, isZenMode, zenYOffset, zenXOffset, onInteractionStart, dragProgressRef, onToggleZen }: ThreeSceneProps) {
     const controlsRef = useRef<any>(null);
     const { gl, camera, size } = useThree();
 
@@ -49,9 +52,9 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
 
         switch (currentTab) {
             case "FEED":
-                // Standard product view - pushed slightly up on screen
-                targetZ = stableZRef.current;
-                targetY = -0.3;
+                // In zen mode, center the object vertically for immersive viewing
+                targetZ = isZenMode ? stableZRef.current * 0.9 : stableZRef.current;
+                targetY = isZenMode ? 0 : -0.3;
                 break;
             case "ECOSYSTEM":
                 // Shifted back and left to compliment Bento Grid
@@ -79,7 +82,7 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
         } else if (currentTab === "FEED" && !dragProgressRef.current) {
             // Smoothly return the focus target to the center (with Y bias for top-heavy layout)
             controlsRef.current.target.x = THREE.MathUtils.damp(controlsRef.current.target.x, 0, 3, delta);
-            controlsRef.current.target.y = THREE.MathUtils.damp(controlsRef.current.target.y, -0.3, 3, delta);
+            controlsRef.current.target.y = THREE.MathUtils.damp(controlsRef.current.target.y, isZenMode ? 0 : -0.3, 3, delta);
         }
     });
 
@@ -87,6 +90,13 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
     useEffect(() => {
         if (controlsRef.current) controlsRef.current.reset();
     }, [currentIndex]);
+
+    // Reset zoom gracefully on zen mode exit
+    useEffect(() => {
+        if (!isZenMode && controlsRef.current) {
+            controlsRef.current.reset();
+        }
+    }, [isZenMode]);
 
     // Zoom: allow pinch (ctrl+wheel / trackpad) but not regular scroll-wheel.
     useEffect(() => {
@@ -117,6 +127,9 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
                 key={currentCampaign.id}
                 type={currentCampaign.modelType}
                 color={currentCampaign.color}
+                isZenMode={isZenMode}
+                zenYOffset={zenYOffset}
+                zenXOffset={zenXOffset}
                 onPointerDown={() => {
                     onInteractionStart();
                 }}
