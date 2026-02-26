@@ -41,10 +41,6 @@ export interface Campaign {
     lifecycle: LifecycleStage;
     variants?: Variant[];
     backers?: number;
-    brandPrompt?: string;
-    deliveryDate?: string;
-    minOrders?: number;
-    minFunding?: number;
 }
 
 export interface Brand {
