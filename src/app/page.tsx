@@ -54,11 +54,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-[100dvw] h-[100dvh] bg-[#F9FAFB] overflow-hidden">
+    <div className="fixed inset-0 w-[100dvw] h-[100dvh] bg-[#0D0C0B] overflow-hidden">
 
       {/* 3D CANVAS — conditionally visible based on tab */}
       <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${currentTab === "FEED" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div className="absolute inset-0 bg-white">
+        <div className="absolute inset-0 bg-[#0D0C0B]">
           <ErrorBoundary>
             <Suspense fallback={null}>
               <Canvas
