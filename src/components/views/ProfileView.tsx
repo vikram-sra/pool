@@ -1,188 +1,272 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Edit3, Camera, LogOut, Lock, Activity, CheckCircle2, Zap, Shield, Star, Award } from "lucide-react";
+import { Lock, Zap, Activity, Award, Package, TrendingUp, CheckCircle2, Shield } from "lucide-react";
 import { USER_PROFILE } from "@/data/campaigns";
 
+// Contribution metadata per pledge title
+const PLEDGE_META: Record<string, { goal: string; contribution: number }> = {
+    'Retro 95 Neon':  { goal: '$20k', contribution: 2.1 },
+    'Walkman Cyber':  { goal: '$80k', contribution: 4.8 },
+    'Ghost Edition':  { goal: '$180k', contribution: 12.4 },
+    'Ear (Zero)':     { goal: '$15k', contribution: 0.8 },
+};
+
+const STATUS_CONFIG = {
+    'Locked':  { label: 'LOCKED',    bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.3)',  text: '#F59E0B', Icon: Lock },
+    'Escrow':  { label: 'IN ESCROW', bg: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.3)',  text: '#38BDF8', Icon: Activity },
+    'Greenlit':{ label: 'GREENLIT',  bg: 'rgba(34,197,94,0.15)',   border: 'rgba(34,197,94,0.3)',   text: '#22C55E', Icon: Zap },
+};
+
 export default function ProfileView() {
-    const [isEditing, setIsEditing] = useState(false);
     const user = USER_PROFILE;
 
-    return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar bg-gray-50 pt-safe pointer-events-auto z-10">
-            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-3 pb-4">
-                {!isEditing ? (
-                    <div className="space-y-6">
-                        <header className="flex justify-between items-end">
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 leading-tight mb-2">
-                                    My Pool
-                                </h1>
-                                <p className="text-sm font-medium text-gray-400 flex items-center gap-2"><Shield size={14} className="text-blue-600" /> Authenticated</p>
-                            </div>
-                            <motion.button
-                                onClick={() => setIsEditing(true)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                aria-label="Edit profile"
-                                className="bg-white rounded-[var(--radius-sm)] p-3 border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm transition-all duration-200"
-                                style={{ minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
-                            >
-                                <Edit3 size={18} strokeWidth={2.5} />
-                            </motion.button>
-                        </header>
+    const totalPledgedNum = 1025; // $100 + $350 + $500 + $75
+    const greenlitCount = user.pledges.filter(p => p.status === 'Greenlit').length;
+    const inPipelineCount = user.pledges.filter(p => p.status === 'Locked' || p.status === 'Greenlit').length;
 
-                        {/* Profile Card */}
-                        <div className="bg-white rounded-[var(--radius-xl)] p-6 md:p-10 border border-gray-100 shadow-sm">
-                            <div className="flex flex-col md:flex-row items-center gap-8">
-                                {/* Avatar */}
-                                <div className="relative shrink-0">
-                                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-[var(--radius-xl)] bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-900 border border-gray-200 shadow-sm">
-                                        {user.initials}
-                                    </div>
-                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-[var(--radius-sm)] bg-blue-600 flex items-center justify-center border-2 border-white shadow-sm">
-                                        <CheckCircle2 size={16} className="text-white" />
-                                    </div>
-                                </div>
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 text-gray-900">{user.name}</h2>
-                                    <p className="font-semibold uppercase tracking-wider text-[11px] text-gray-400 mb-5">{user.tier} • {user.title}</p>
-                                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                                        {user.tags.map((tag) => (
-                                            <span key={tag} className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md text-[10px] font-bold tracking-wider text-gray-500 uppercase">{tag}</span>
-                                        ))}
-                                    </div>
-                                </div>
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 w-full h-full overflow-y-auto pb-[90px] no-scrollbar pt-safe pointer-events-auto z-10"
+            style={{ background: '#0D0C0B' }}
+        >
+            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-3 pb-4">
+                <div className="space-y-6">
+
+                    {/* ── Impact Header ── */}
+                    <header className="pt-2">
+                        <div className="flex items-start justify-between mb-1">
+                            <h1
+                                className="text-3xl md:text-4xl font-bold tracking-tight leading-tight"
+                                style={{ color: '#F5F0EB' }}
+                            >
+                                Demand<br />Portfolio
+                            </h1>
+                            <div className="flex flex-col items-end gap-1.5 pt-1">
+                                <span
+                                    className="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-widest uppercase"
+                                    style={{
+                                        background: 'rgba(245,158,11,0.12)',
+                                        color: '#F59E0B',
+                                        border: '1px solid rgba(245,158,11,0.25)',
+                                    }}
+                                >
+                                    {user.tier}
+                                </span>
+                                <span className="text-[11px] font-medium" style={{ color: 'rgba(245,240,235,0.4)' }}>
+                                    {user.title}
+                                </span>
                             </div>
                         </div>
+                        <p className="text-base font-medium mt-3 leading-relaxed" style={{ color: 'rgba(245,240,235,0.6)' }}>
+                            You&apos;ve helped bring{' '}
+                            <span style={{ color: '#22C55E', fontWeight: 700 }}>
+                                {greenlitCount} product{greenlitCount !== 1 ? 's' : ''}
+                            </span>{' '}
+                            into existence
+                        </p>
+                    </header>
 
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* ── Identity Row ── */}
+                    <div
+                        className="flex items-center gap-4 rounded-2xl p-4"
+                        style={{ background: '#1A1714', border: '1px solid rgba(255,255,255,0.07)' }}
+                    >
+                        <div
+                            className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0"
+                            style={{ background: '#231F1B', color: '#F5F0EB', border: '1px solid rgba(255,255,255,0.1)' }}
+                        >
+                            {user.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="font-bold text-base" style={{ color: '#F5F0EB' }}>{user.name}</div>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                {user.tags.map(tag => (
+                                    <span
+                                        key={tag}
+                                        className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            color: 'rgba(245,240,235,0.4)',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                        }}
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] flex-shrink-0" style={{ color: 'rgba(245,240,235,0.35)' }}>
+                            <Shield size={12} />
+                            <span>Verified</span>
+                        </div>
+                    </div>
+
+                    {/* ── Co-Creation Stats Row ── */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { label: 'Total Pledged',  value: `$${totalPledgedNum.toLocaleString()}`, icon: TrendingUp,   color: '#F59E0B', desc: 'across all campaigns' },
+                            { label: 'Escrowed',       value: user.assetsEscrowed,                    icon: Lock,         color: '#38BDF8', desc: 'safely held in escrow' },
+                            { label: 'In Pipeline',    value: `${inPipelineCount}`,                   icon: Package,      color: '#22C55E', desc: 'products in production' },
+                            { label: 'Co-Created',     value: `${greenlitCount}`,                     icon: CheckCircle2, color: '#A78BFA', desc: 'greenlit by community' },
+                        ].map((stat, i) => (
+                            <motion.div
+                                key={stat.label}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + i * 0.05 }}
+                                className="rounded-xl p-4"
+                                style={{ background: '#1A1714', border: '1px solid rgba(255,255,255,0.07)' }}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <stat.icon size={13} style={{ color: stat.color }} />
+                                    <span
+                                        className="text-[10px] font-bold uppercase tracking-wider"
+                                        style={{ color: 'rgba(245,240,235,0.4)' }}
+                                    >
+                                        {stat.label}
+                                    </span>
+                                </div>
+                                <div className="text-2xl font-bold" style={{ color: '#F5F0EB' }}>{stat.value}</div>
+                                <div className="text-[11px] mt-0.5" style={{ color: 'rgba(245,240,235,0.35)' }}>{stat.desc}</div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* ── Portfolio Grid (pledge impact cards) ── */}
+                    <div>
+                        <h3
+                            className="text-base font-bold tracking-tight mb-1 flex items-center gap-2"
+                            style={{ color: '#F5F0EB' }}
+                        >
+                            <Lock size={15} style={{ color: 'rgba(245,240,235,0.4)' }} />
+                            Active Allocations
+                        </h3>
+                        <p className="text-[12px] mb-4" style={{ color: 'rgba(245,240,235,0.4)' }}>
+                            Products you&apos;ve co-created — funds held in escrow until the goal is met.
+                        </p>
+                        <div className="space-y-3">
+                            {user.pledges.map((pledge, idx) => {
+                                const meta = PLEDGE_META[pledge.title] ?? { goal: '$10k', contribution: 1.0 };
+                                const cfg = STATUS_CONFIG[pledge.status];
+                                const { Icon: StatusIcon } = cfg;
+
+                                return (
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, x: -8 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.2 + idx * 0.07 }}
+                                        className="rounded-2xl overflow-hidden"
+                                        style={{ background: '#1A1714', border: '1px solid rgba(255,255,255,0.07)' }}
+                                    >
+                                        {/* Brand color accent bar */}
+                                        <div className="h-1 w-full" style={{ background: pledge.color }} />
+
+                                        <div className="p-4">
+                                            {/* Title + amount row */}
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex-1 min-w-0 pr-3">
+                                                    <div
+                                                        className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                                                        style={{ color: 'rgba(245,240,235,0.4)' }}
+                                                    >
+                                                        {pledge.brand}
+                                                    </div>
+                                                    <div className="font-bold text-base leading-tight" style={{ color: '#F5F0EB' }}>
+                                                        {pledge.title}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <div className="text-xl font-bold" style={{ color: '#F5F0EB' }}>{pledge.amount}</div>
+                                                    <div className="text-[10px] mt-0.5" style={{ color: 'rgba(245,240,235,0.4)' }}>pledged</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Status badge + contribution % */}
+                                            <div className="flex items-center justify-between">
+                                                <span
+                                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                                    style={{ background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}
+                                                >
+                                                    <StatusIcon size={10} />
+                                                    {cfg.label}
+                                                </span>
+                                                <span
+                                                    className="text-[11px] font-medium"
+                                                    style={{ color: 'rgba(245,240,235,0.45)' }}
+                                                >
+                                                    {meta.contribution}% of {meta.goal} goal
+                                                </span>
+                                            </div>
+
+                                            {/* Contribution progress bar */}
+                                            <div
+                                                className="mt-3 h-1.5 rounded-full overflow-hidden"
+                                                style={{ background: 'rgba(255,255,255,0.06)' }}
+                                            >
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${Math.min(meta.contribution * 5, 100)}%` }}
+                                                    transition={{ delay: 0.4 + idx * 0.1, duration: 0.8, ease: 'easeOut' }}
+                                                    className="h-full rounded-full"
+                                                    style={{ background: pledge.color }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* ── Achievements ── */}
+                    <div className="pb-8">
+                        <h3
+                            className="text-base font-bold tracking-tight mb-1 flex items-center gap-2"
+                            style={{ color: '#F5F0EB' }}
+                        >
+                            <Award size={15} style={{ color: 'rgba(245,240,235,0.4)' }} />
+                            Achievements
+                        </h3>
+                        <p className="text-[12px] mb-4" style={{ color: 'rgba(245,240,235,0.4)' }}>
+                            Badges earned through your co-creation activity.
+                        </p>
+                        <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                             {[
-                                { label: "Escrowed", value: user.assetsEscrowed, icon: Lock, color: "#111", description: "Funds held safely" },
-                                { label: "Squads", value: String(user.activeSquads).padStart(2, "0"), icon: Star, color: "#2563EB", description: "Groups you belong to" },
-                                { label: "Pledges", value: String(user.pledges.length).padStart(2, "0"), icon: Zap, color: "#059669", description: "Products you've backed" },
-                                { label: "Rank", value: "#142", icon: Award, color: "#D97706", description: "Your position" },
-                            ].map((s, i) => (
-                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="bg-white rounded-[var(--radius-lg)] p-5 border border-gray-100 shadow-sm">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <s.icon size={14} style={{ color: s.color }} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{s.label}</span>
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900">{s.value}</div>
-                                    <div className="text-[11px] text-gray-400 mt-1">{s.description}</div>
+                                { emoji: '🔥', label: 'Early Backer',   unlocked: true },
+                                { emoji: '💎', label: 'Diamond Hands',  unlocked: true },
+                                { emoji: '🚀', label: 'Launch Day',     unlocked: true },
+                                { emoji: '👁️', label: 'Trend Spotter', unlocked: false },
+                                { emoji: '🏆', label: 'Top 100',        unlocked: false },
+                            ].map((badge, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0.85 }}
+                                    animate={{ opacity: badge.unlocked ? 1 : 0.3, scale: 1 }}
+                                    transition={{ delay: 0.35 + i * 0.06 }}
+                                    className="rounded-xl border p-4 flex flex-col items-center gap-2 text-center"
+                                    style={{
+                                        background: '#1A1714',
+                                        borderColor: badge.unlocked ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+                                    }}
+                                >
+                                    <span className="text-2xl">{badge.emoji}</span>
+                                    <span
+                                        className="text-[9px] font-bold uppercase tracking-wider"
+                                        style={{ color: 'rgba(245,240,235,0.5)' }}
+                                    >
+                                        {badge.label}
+                                    </span>
                                 </motion.div>
                             ))}
                         </div>
-
-                        {/* Active Allocations */}
-                        <div>
-                            <h3 className="text-lg font-bold tracking-tight mb-2 flex items-center gap-2 text-gray-900">
-                                <Lock size={16} className="text-gray-400" /> Active Allocation
-                            </h3>
-                            <p className="text-[12px] text-gray-400 mb-5">Products you've pledged to — funds are held in escrow until the goal is met.</p>
-                            <div className="space-y-3">
-                                {user.pledges.map((pledge, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.2 + idx * 0.08 }}
-                                        className="bg-white rounded-[var(--radius-lg)] border border-gray-100 p-5 flex justify-between items-center hover:shadow-md transition-all cursor-pointer group"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: pledge.color }} />
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-wider mb-1 text-gray-400">{pledge.brand}</div>
-                                                <div className="font-bold text-base text-gray-900 group-hover:text-blue-600 transition-colors">{pledge.title}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xl font-bold text-gray-900">{pledge.amount}</div>
-                                            <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1 justify-end mt-1">
-                                                {pledge.status === "Locked" ? <Lock size={10} /> : pledge.status === "Greenlit" ? <Zap size={10} /> : <Activity size={10} />} {pledge.status}
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Achievements */}
-                        <div className="pb-8">
-                            <h3 className="text-lg font-bold tracking-tight mb-2 flex items-center gap-2 text-gray-900">
-                                <Award size={16} className="text-gray-400" /> Achievements
-                            </h3>
-                            <p className="text-[12px] text-gray-400 mb-5">Badges earned through your activity on the platform.</p>
-                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                                {[
-                                    { emoji: "🔥", label: "Early Backer", unlocked: true },
-                                    { emoji: "💎", label: "Diamond Hands", unlocked: true },
-                                    { emoji: "🚀", label: "Launch Day", unlocked: true },
-                                    { emoji: "👁️", label: "Trend Spotter", unlocked: false },
-                                    { emoji: "🏆", label: "Top 100", unlocked: false },
-                                ].map((badge, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.3 + i * 0.06 }}
-                                        className={`bg-white rounded-[var(--radius-lg)] border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-2 text-center ${!badge.unlocked ? "opacity-30 grayscale" : ""}`}
-                                    >
-                                        <span className="text-2xl mb-1">{badge.emoji}</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">{badge.label}</span>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
                     </div>
-                ) : (
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-8">
-                        <header className="flex justify-between items-end">
-                            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 leading-tight">Update<br />Identity</h1>
-                            <button
-                                onClick={() => setIsEditing(false)}
-                                aria-label="Save profile changes"
-                                className="bg-black text-white px-8 py-3 rounded-[var(--radius-sm)] font-bold uppercase tracking-wider text-xs hover:bg-gray-800 transition-all shadow-sm"
-                                style={{ minHeight: "var(--min-touch)" }}
-                            >Save</button>
-                        </header>
-                        <div className="space-y-6 max-w-2xl">
-                            <div className="bg-white rounded-[var(--radius-xl)] border border-gray-100 p-8 flex flex-col items-center gap-5 shadow-sm">
-                                <div className="relative group cursor-pointer">
-                                    <div className="w-28 h-28 rounded-[var(--radius-xl)] bg-gray-100 flex items-center justify-center text-4xl font-bold text-gray-900 border border-gray-200 shadow-sm transition-transform group-hover:scale-105">
-                                        {user.initials}
-                                    </div>
-                                    <div className="absolute inset-0 rounded-[var(--radius-xl)] bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <Camera className="text-white" size={28} />
-                                    </div>
-                                </div>
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tap to upload</p>
-                            </div>
-                            <div className="space-y-5 bg-white p-8 rounded-[var(--radius-xl)] border border-gray-100 shadow-sm">
-                                {[{ label: "Public Alias", val: user.name }, { label: "Email", val: user.email }, { label: "Bio", val: user.bio }].map((field, i) => (
-                                    <div key={i}>
-                                        <label className="block text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">{field.label}</label>
-                                        <input
-                                            type="text"
-                                            defaultValue={field.val}
-                                            aria-label={field.label}
-                                            className="w-full bg-gray-50 rounded-[var(--radius-sm)] border border-gray-200 p-4 font-semibold text-sm text-gray-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                aria-label="Sign out"
-                                className="w-full py-5 rounded-[var(--radius-sm)] bg-red-50 text-red-600 border border-red-100 font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
-                                style={{ minHeight: "var(--min-touch)" }}
-                            >
-                                <LogOut size={16} /> Sign Out
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
+
+                </div>
             </div>
         </motion.div>
     );
