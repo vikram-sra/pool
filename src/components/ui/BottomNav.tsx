@@ -68,11 +68,11 @@ function NavButton({ tab, isActive, onClick }: {
                             boxShadow: isActive ? "0 4px 12px rgba(79,70,229,0.15)" : "none",
                         }}
                     >
-                        <Wand2 size={18} strokeWidth={2.2} className={isActive ? "text-indigo-600" : "text-gray-400"} />
+                        <Wand2 size={24} strokeWidth={2.5} className={isActive ? "text-indigo-600" : "text-gray-400"} />
                     </div>
                 </motion.div>
                 <span
-                    className={`text-[10px] leading-none tracking-tight mt-1 ${isActive ? "font-bold text-indigo-600" : "font-medium text-gray-400"}`}
+                    className={`text-[10px] leading-none tracking-tight mt-1 ${isActive ? "font-bold text-indigo-600" : "font-bold text-gray-400"}`}
                 >
                     {tab.label}
                 </span>
@@ -94,9 +94,9 @@ function NavButton({ tab, isActive, onClick }: {
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className={isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-500 transition-colors"}
             >
-                <tab.icon size={21} strokeWidth={isActive ? 2.2 : 1.6} />
+                <tab.icon size={26} strokeWidth={isActive ? 2.5 : 2.0} />
             </motion.div>
-            <span className={`text-[10px] leading-none tracking-tight ${isActive ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>
+            <span className={`text-[11px] leading-none tracking-tight ${isActive ? "font-bold text-gray-900" : "font-bold text-gray-400"}`}>
                 {tab.label}
             </span>
             <AnimatePresence>

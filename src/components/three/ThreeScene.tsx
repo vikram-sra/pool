@@ -40,7 +40,14 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
         stableZRef.current = Math.max(zForWidth, zForHeight, ORBIT_MIN_DISTANCE + 0.5);
     }, [size]);
 
-    // Apply smooth camera transitions based on current tab
+    const isAnimatingZen = useRef(false);
+    useEffect(() => {
+        isAnimatingZen.current = true;
+        const t = setTimeout(() => { isAnimatingZen.current = false; }, 1500);
+        return () => clearTimeout(t);
+    }, [isZenMode]);
+
+    // Focus target damping based on Zen mode
     useFrame((state, delta) => {
         if (!controlsRef.current) return;
 
@@ -83,6 +90,13 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
             // Smoothly return the focus target to the center (with Y bias for top-heavy layout)
             controlsRef.current.target.x = THREE.MathUtils.damp(controlsRef.current.target.x, 0, 3, delta);
             controlsRef.current.target.y = THREE.MathUtils.damp(controlsRef.current.target.y, isZenMode ? 0 : -0.3, 3, delta);
+
+            // Allow camera to naturally animate during mode transitions
+            if (isAnimatingZen.current) {
+                state.camera.position.x = THREE.MathUtils.damp(state.camera.position.x, 0, 3, delta);
+                state.camera.position.y = THREE.MathUtils.damp(state.camera.position.y, targetY, 3, delta);
+                state.camera.position.z = THREE.MathUtils.damp(state.camera.position.z, targetZ, 3, delta);
+            }
         }
     });
 
@@ -90,13 +104,6 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
     useEffect(() => {
         if (controlsRef.current) controlsRef.current.reset();
     }, [currentIndex]);
-
-    // Reset zoom gracefully on zen mode exit
-    useEffect(() => {
-        if (!isZenMode && controlsRef.current) {
-            controlsRef.current.reset();
-        }
-    }, [isZenMode]);
 
     // Zoom: allow pinch (ctrl+wheel / trackpad) but not regular scroll-wheel.
     useEffect(() => {

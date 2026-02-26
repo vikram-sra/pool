@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronLeft, Send, Flame, Zap, CheckCircle2, Target, Lightbulb, MessageSquare, Sparkles, Wand2, Moon, Sun } from "lucide-react";
 import { BRANDS } from "@/data/campaigns";
+import { MOCK_PITCHES, BRAND_PROMPTS, SEED_PITCHES, type ExtractedPitch } from "@/data/pitches";
 
 // ── Time-of-day helper ───────────────────────────────────────────────────────
 function getTimeOfDay(): "dawn" | "day" | "sunset" | "night" {
@@ -39,70 +40,6 @@ const TIME_THEMES = {
         particleColor: "rgba(106,90,205,0.3)",
         icon: Moon,
     },
-};
-
-// ── Mock extracted pitches ───────────────────────────────────────────────────
-interface ExtractedPitch {
-    id: string;
-    brandName: string;
-    brandHue: string;
-    brandLogo?: string;
-    iconPath?: string;
-    iconHex?: string;
-    title: string;
-    summary: string;
-    voteCount: number;
-    threshold: number;
-    userVoted: boolean;
-}
-
-const MOCK_PITCHES: ExtractedPitch[] = [
-    { id: "p1", brandName: "Nike", brandHue: "#FF6B2C", brandLogo: "/brands/nike_logo_1772059075484.png", title: "Jordan 1 Olive Retro", summary: "Bring back the 1985 Olive colorway of the Jordan 1 High in modern materials. Full grain leather, OG box.", voteCount: 4120, threshold: 5000, userVoted: false },
-    { id: "p2", brandName: "Sony", brandHue: "#38BDF8", iconPath: "M8.5505 9.8881c.921 0 1.6574.2303 2.2209.7423.3848.3485.5999.8454.5939 1.3665a1.9081 1.9081 0 0 1-.5939 1.3726c-.5272.4848-1.3483.7423-2.221.7423-.8725 0-1.6785-.2575-2.2148-.7423-.3908-.3485-.609-.8484-.603-1.3726 0-.518.2182-1.015.603-1.3665.5-.4545 1.3847-.7423 2.2149-.7423z", iconHex: "#000000", title: "Discman Revival DAP", summary: "Modern hi-res audio DAP in a Discman shell. CD slot is now a 3.5\" OLED display showing waveforms.", voteCount: 3980, threshold: 4000, userVoted: false },
-    { id: "p3", brandName: "Leica", brandHue: "#E20612", iconPath: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z", iconHex: "#E20612", title: "M-Zero Digital", summary: "A digital M-mount body with a single button — no menus, no screen. Exposure by eye.", voteCount: 2870, threshold: 4000, userVoted: false },
-    { id: "p4", brandName: "Dyson", brandHue: "#C084FC", brandLogo: "/brands/dyson_logo_1772059346895.png", title: "Pure Air Backpack", summary: "Wearable air purifier built into a 20L daypack. Real-time AQI display.", voteCount: 1940, threshold: 3000, userVoted: false },
-    { id: "p5", brandName: "Teenage Eng", brandHue: "#111111", brandLogo: "/brands/teenage_eng_logo_1772059155534.png", title: "OP-XY Modular Synth", summary: "Snap-together synths that magnetically click like lego blocks to form a master sequencer.", voteCount: 1240, threshold: 2000, userVoted: false },
-];
-
-// ── Mock brand prompts ───────────────────────────────────────────────────────
-const BRAND_PROMPTS: Record<string, string> = {
-    Nike: "What retro silhouette or colorway should we bring back next?",
-    Sony: "What product from our archive would you buy again if we modernized it?",
-    Leica: "What feature-set would make your ultimate minimal film-like camera?",
-    Arcteryx: "What harsh environment are we NOT designing for that we should be?",
-    "Teenage Eng": "What instrument format should we tackle that no one else has?",
-    Braun: "Which forgotten Braun product deserves a faithful modern reissue?",
-    Dyson: "What everyday problem are you surprised technology hasn't solved yet?",
-    Nintendo: "Which classic IP or console would you back if we did a limited reissue?",
-    MillerKnoll: "What does your ideal work-from-home setup actually need?",
-};
-
-// ── Mock communal pitch streams ──────────────────────────────────────────────
-const SEED_PITCHES: Record<string, string[]> = {
-    Nike: [
-        "Bring back the Air Max 95 Neon Yellow but in a narrow width option.",
-        "Jordan 1 in canvas — summer version, unlined, breathable.",
-        "ACG line but for actual city commuting not just trail hiking.",
-        "Nike SB with recycled ocean plastics — prove sustainability looks good.",
-        "The Dunk in corduroy. You know it's time.",
-        "Air Rift comeback. Running toe-split sandal was ahead of its time.",
-    ],
-    Sony: [
-        "MDR-7506 with Bluetooth. Keep the coiled cable option.",
-        "Trinitron monitor revival. Curved CRT aesthetic, modern LCD.",
-        "MZ-N1 MiniDisc player but as a USB-C audio DAC/amp.",
-        "PSP go but with Switch-level power.",
-    ],
-    Leica: [
-        "Leica M with a built-in light meter — just the needle.",
-        "A point-and-shoot with M glass mount, fixed 35mm f2.",
-        "Reissue the Leica CL in black paint with modern sensor.",
-    ],
-    Dyson: [
-        "Dyson Air Ring: wearable personal cooling ring for summer.",
-        "A silent vacuum that actually works silently.",
-        "Air purifier integrated into a desk lamp.",
-    ],
 };
 
 function getSeedPitches(brand: string): string[] {
@@ -164,7 +101,7 @@ export default function PitchView() {
 
     useEffect(() => { setTod(getTimeOfDay()); }, []);
     const theme = TIME_THEMES[tod];
-    const isNight = false; // Always use light theme for white background
+    const isNight = false;
     const textColor = "text-gray-900";
     const subTextColor = "text-gray-500";
 
@@ -180,8 +117,7 @@ export default function PitchView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col overflow-hidden pointer-events-auto z-10"
-            style={{ background: "#FFFFFF" }}
+            className="absolute inset-0 flex flex-col overflow-hidden pointer-events-auto z-10 bg-white"
         >
             {/* Subtle floating ambient dots instead of large blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">

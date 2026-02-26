@@ -371,8 +371,8 @@ export default function FeedView({
                             style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
                         >
                             {/* Horizontal X slider */}
-                            <div className="pointer-events-auto flex items-center gap-2.5" style={{ width: 190 }}>
-                                <span className="text-[9px] font-bold text-gray-400">←</span>
+                            <div className="pointer-events-auto flex items-center gap-3" style={{ width: 220 }}>
+                                <span className="text-[14px] font-black text-black">←</span>
                                 <input
                                     type="range"
                                     min="-0.8"
@@ -383,7 +383,7 @@ export default function FeedView({
                                     aria-label="Adjust horizontal position"
                                     className="zen-slider flex-1"
                                 />
-                                <span className="text-[9px] font-bold text-gray-400">→</span>
+                                <span className="text-[14px] font-black text-black">→</span>
                             </div>
 
                             {/* Tips bar */}
@@ -411,25 +411,21 @@ export default function FeedView({
                             className="absolute right-4 top-[32%] z-50 pointer-events-none flex flex-col items-center gap-1 w-11"
                             style={{ height: 220 }}
                         >
-                            <span className="text-[9px] font-bold text-gray-400">↑</span>
-                            <div className="relative flex-1 flex items-center justify-center w-full min-h-[160px]">
+                            <span className="text-[14px] font-black text-black">↑</span>
+                            <div className="relative flex-1 flex items-center justify-center w-full min-h-[200px]">
                                 <input
                                     type="range"
-                                    min="-0.8"
-                                    max="0.8"
+                                    min="-1"
+                                    max="1"
                                     step="0.02"
-                                    value={-zenYOffset}
-                                    onChange={(e) => setZenYOffset(-parseFloat(e.target.value))}
+                                    value={zenYOffset}
+                                    onChange={(e) => setZenYOffset(parseFloat(e.target.value))}
                                     aria-label="Adjust vertical position"
-                                    className="zen-slider pointer-events-auto"
-                                    style={{
-                                        width: 160,
-                                        transform: "rotate(-90deg)",
-                                        margin: 0
-                                    }}
+                                    className="zen-slider absolute transform -rotate-90 origin-center pointer-events-auto cursor-pointer"
+                                    style={{ width: "200px", zIndex: 60 }}
                                 />
                             </div>
-                            <span className="text-[9px] font-bold text-gray-400">↓</span>
+                            <span className="text-[14px] font-black text-black">↓</span>
                         </motion.div>
                     </>
                 )}
