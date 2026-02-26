@@ -26,10 +26,10 @@ export default function BottomNav({ currentTab, setCurrentTab, hidden }: BottomN
             <div
                 className="flex items-end justify-around px-3 pt-2 pb-safe"
                 style={{
-                    background: "rgba(255,255,255,0.88)",
+                    background: "rgba(13,12,11,0.92)",
                     backdropFilter: "blur(24px) saturate(180%)",
                     WebkitBackdropFilter: "blur(24px) saturate(180%)",
-                    borderTop: "1px solid rgba(0,0,0,0.06)",
+                    borderTop: "1px solid rgba(255,255,255,0.08)",
                 }}
             >
                 {TABS.map((tab) => (
@@ -63,16 +63,17 @@ function NavButton({ tab, isActive, onClick }: {
                     <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center border"
                         style={{
-                            background: isActive ? "#FFFFFF" : "rgba(0,0,0,0.03)",
-                            borderColor: isActive ? "rgba(79,70,229,0.3)" : "rgba(0,0,0,0.05)",
-                            boxShadow: isActive ? "0 4px 12px rgba(79,70,229,0.15)" : "none",
+                            background: isActive ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.04)",
+                            borderColor: isActive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)",
+                            boxShadow: isActive ? "0 4px 12px rgba(245,158,11,0.2)" : "none",
                         }}
                     >
-                        <Wand2 size={24} strokeWidth={2.5} className={isActive ? "text-indigo-600" : "text-gray-400"} />
+                        <Wand2 size={24} strokeWidth={2.5} style={{ color: isActive ? "#F59E0B" : "rgba(255,255,255,0.35)" }} />
                     </div>
                 </motion.div>
                 <span
-                    className={`text-[10px] leading-none tracking-tight mt-1 ${isActive ? "font-bold text-indigo-600" : "font-bold text-gray-400"}`}
+                    className="text-[10px] leading-none tracking-tight mt-1 font-bold"
+                    style={{ color: isActive ? "#F59E0B" : "rgba(255,255,255,0.35)" }}
                 >
                     {tab.label}
                 </span>
@@ -92,11 +93,14 @@ function NavButton({ tab, isActive, onClick }: {
             <motion.div
                 animate={{ scale: isActive ? 1.05 : 1, y: isActive ? -1 : 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-500 transition-colors"}
+                style={{ color: isActive ? "#F5F0EB" : "rgba(255,255,255,0.35)" }}
             >
                 <tab.icon size={26} strokeWidth={isActive ? 2.5 : 2.0} />
             </motion.div>
-            <span className={`text-[11px] leading-none tracking-tight ${isActive ? "font-bold text-gray-900" : "font-bold text-gray-400"}`}>
+            <span
+                className="text-[11px] leading-none tracking-tight font-bold"
+                style={{ color: isActive ? "#F5F0EB" : "rgba(255,255,255,0.35)" }}
+            >
                 {tab.label}
             </span>
             <AnimatePresence>
@@ -106,7 +110,8 @@ function NavButton({ tab, isActive, onClick }: {
                         animate={{ opacity: 1, scaleX: 1 }}
                         exit={{ opacity: 0, scaleX: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-gray-900"
+                        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full"
+                        style={{ backgroundColor: "#F59E0B" }}
                     />
                 )}
             </AnimatePresence>

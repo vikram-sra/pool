@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ShieldCheck, CheckCircle2, Lock, Users, Zap, Info, X, Share2,
-    Bookmark, MessageCircle, Heart, Maximize2, Move, RotateCcw, Hand,
+    Bookmark, MessageCircle, Heart, Maximize2, Move, RotateCcw, Hand, Package, Calendar, ChevronRight,
 } from "lucide-react";
 import { CAMPAIGNS } from "@/data/campaigns";
 import { SCROLL_COOLDOWN_MS, SWIPE_COOLDOWN_MS, WHEEL_DELTA_THRESHOLD } from "@/constants";
@@ -51,12 +51,19 @@ export default function FeedView({
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [pledgeConfirm, setPledgeConfirm] = useState(false);
+    const [cardSlide, setCardSlide] = useState(0);
     const lastScrollTime = useRef(0);
     const sheetStartY = useRef(0);
+    const carouselTouchStartX = useRef(0);
+    const carouselTouchStartY = useRef(0);
+    const isCarouselSwiping = useRef(false);
 
     const isLiked = liked[currentCampaign.id] ?? false;
     const isSaved = saved[currentCampaign.id] ?? false;
     const progressPercent = Math.min((currentCampaign.pledged / currentCampaign.goal) * 100, 100);
+
+    // Reset card slide when campaign changes
+    useEffect(() => { setCardSlide(0); }, [currentCampaign.id]);
 
     const handleNext = useCallback(() => { setCurrentIndex((p: number) => (p + 1) % CAMPAIGNS.length); }, [setCurrentIndex]);
     const handlePrev = useCallback(() => { setCurrentIndex((p: number) => (p - 1 + CAMPAIGNS.length) % CAMPAIGNS.length); }, [setCurrentIndex]);
@@ -116,6 +123,7 @@ export default function FeedView({
         };
 
         const onTouchMove = (e: TouchEvent) => {
+            if (isCarouselSwiping.current) { phase = "blocked"; return; }
             if (phase === "swiping") {
                 const dy = e.touches[0].clientY - startY;
                 const raw = -(dy / window.innerHeight) * 1.4;
@@ -149,6 +157,7 @@ export default function FeedView({
 
         const onTouchEnd = (e: TouchEvent) => {
             dragProgressRef.current = 0;
+            isCarouselSwiping.current = false;
 
             if (phase !== "swiping") { phase = "idle"; return; }
 
@@ -174,6 +183,7 @@ export default function FeedView({
 
         const onTouchCancel = () => {
             dragProgressRef.current = 0;
+            isCarouselSwiping.current = false;
             phase = "idle";
         };
 
@@ -217,6 +227,25 @@ export default function FeedView({
         showToast("Pledge locked — zero risk, fully refundable");
     };
 
+    // Carousel: 3 slides total (slide 2 only shown for VOTING/FUNDING/LOCKED)
+    const maxSlide = (currentCampaign.deliveryDate || currentCampaign.minOrders) ? 2 : 1;
+
+    const handleCarouselTouchStart = (e: React.TouchEvent) => {
+        carouselTouchStartX.current = e.touches[0].clientX;
+        carouselTouchStartY.current = e.touches[0].clientY;
+        isCarouselSwiping.current = false;
+    };
+
+    const handleCarouselTouchEnd = (e: React.TouchEvent) => {
+        const dx = e.changedTouches[0].clientX - carouselTouchStartX.current;
+        const dy = e.changedTouches[0].clientY - carouselTouchStartY.current;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            isCarouselSwiping.current = true;
+            if (dx < 0) setCardSlide(s => Math.min(s + 1, maxSlide));
+            else setCardSlide(s => Math.max(s - 1, 0));
+        }
+    };
+
     const ONBOARDING_STEPS = [
         { title: "Welcome to The Demand Pool", desc: "Swipe through products that brands are considering. Your pledge signals real demand." },
         { title: "Pledge = Power", desc: "Tap \"Pledge Now\" to back a product. Your funds are held in escrow — 100% refundable if the goal isn't met." },
@@ -235,22 +264,22 @@ export default function FeedView({
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-auto"
                     >
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismissOnboarding} />
+                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={dismissOnboarding} />
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative bg-white rounded-[var(--radius-xl)] p-8 mx-6 max-w-sm w-full shadow-[var(--shadow-elevated)] z-10"
+                            className="relative bg-[#1A1714] rounded-[var(--radius-xl)] p-8 mx-6 max-w-sm w-full shadow-[var(--shadow-elevated)] z-10 border border-white/10"
                         >
                             <div className="flex items-center gap-2 mb-6">
                                 {ONBOARDING_STEPS.map((_, i) => (
-                                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= onboardingStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div key={i} className="h-1 flex-1 rounded-full transition-colors duration-300" style={{ backgroundColor: i <= onboardingStep ? "#F59E0B" : "rgba(255,255,255,0.15)" }} />
                                 ))}
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">{ONBOARDING_STEPS[onboardingStep].title}</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed mb-8">{ONBOARDING_STEPS[onboardingStep].desc}</p>
+                            <h3 className="text-xl font-bold text-[#F5F0EB] mb-3">{ONBOARDING_STEPS[onboardingStep].title}</h3>
+                            <p className="text-sm text-white/60 leading-relaxed mb-8">{ONBOARDING_STEPS[onboardingStep].desc}</p>
                             <div className="flex gap-3">
-                                <button onClick={dismissOnboarding} className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+                                <button onClick={dismissOnboarding} className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-semibold text-white/40 hover:bg-white/10 transition-colors">
                                     Skip
                                 </button>
                                 <button
@@ -261,7 +290,8 @@ export default function FeedView({
                                             dismissOnboarding();
                                         }
                                     }}
-                                    className="flex-1 py-3 rounded-[var(--radius-sm)] bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                                    className="flex-1 py-3 rounded-[var(--radius-sm)] text-white text-sm font-semibold transition-colors shadow-sm"
+                                    style={{ backgroundColor: "#F59E0B" }}
                                 >
                                     {onboardingStep < ONBOARDING_STEPS.length - 1 ? "Next" : "Get Started"}
                                 </button>
@@ -303,7 +333,7 @@ export default function FeedView({
             </AnimatePresence>
 
             {/* ── VERY SUBTLE COLOR WASH ── */}
-            <div className="absolute inset-0 pointer-events-none z-[0] opacity-10 mix-blend-multiply">
+            <div className="absolute inset-0 pointer-events-none z-[0] opacity-15 mix-blend-screen">
                 <motion.div
                     key={currentCampaign.id + "-wash"}
                     initial={{ opacity: 0 }}
@@ -314,10 +344,10 @@ export default function FeedView({
                 />
             </div>
 
-            {/* ── LIGHT VIGNETTE ── */}
+            {/* ── DARK VIGNETTE ── */}
             <div className={`absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ${isZenMode ? "opacity-0" : "opacity-100"}`}>
-                <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-white via-white/80 to-transparent" />
-                <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-white/90 via-white/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-[55%] bg-gradient-to-t from-[#0D0C0B] via-[#0D0C0B]/75 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-[#0D0C0B]/90 via-[#0D0C0B]/20 to-transparent" />
             </div>
 
             {/* ── TOP BAR ── */}
@@ -329,7 +359,11 @@ export default function FeedView({
                                 key={tab}
                                 onClick={() => setFeedTab(tab)}
                                 aria-label={tab === "foryou" ? "Discover feed" : "Trending feed"}
-                                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${feedTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                                className="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                                style={{
+                                    background: feedTab === tab ? "rgba(245,158,11,0.2)" : "transparent",
+                                    color: feedTab === tab ? "#F59E0B" : "rgba(255,255,255,0.4)",
+                                }}
                             >
                                 {tab === "foryou" ? "Discover" : "Trending"}
                             </button>
@@ -337,8 +371,8 @@ export default function FeedView({
                     </div>
                     {/* Pagination */}
                     <div className="glass rounded-full px-2.5 py-1.5">
-                        <span className="text-[11px] font-semibold text-gray-700 tabular-nums">
-                            {currentIndex + 1}<span className="text-gray-400 mx-0.5">/</span>{CAMPAIGNS.length}
+                        <span className="text-[11px] font-semibold tabular-nums" style={{ color: "rgba(255,255,255,0.6)" }}>
+                            {currentIndex + 1}<span className="mx-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>/</span>{CAMPAIGNS.length}
                         </span>
                     </div>
                 </div>
@@ -358,10 +392,10 @@ export default function FeedView({
                             aria-label="Exit zen mode"
                             className="absolute top-14 right-4 z-50 w-11 h-11 rounded-full glass flex items-center justify-center shadow-md pointer-events-auto"
                         >
-                            <X size={20} className="text-gray-800" />
+                            <X size={20} className="text-[#F5F0EB]" />
                         </motion.button>
 
-                        {/* Control tips — animated up from bottom */}
+                        {/* Control tips */}
                         <motion.div
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -372,7 +406,7 @@ export default function FeedView({
                         >
                             {/* Horizontal X slider */}
                             <div className="pointer-events-auto flex items-center gap-3" style={{ width: 220 }}>
-                                <span className="text-[14px] font-black text-black">←</span>
+                                <span className="text-[14px] font-black text-[#F5F0EB]">←</span>
                                 <input
                                     type="range"
                                     min="-0.8"
@@ -383,26 +417,26 @@ export default function FeedView({
                                     aria-label="Adjust horizontal position"
                                     className="zen-slider flex-1"
                                 />
-                                <span className="text-[14px] font-black text-black">→</span>
+                                <span className="text-[14px] font-black text-[#F5F0EB]">→</span>
                             </div>
 
                             {/* Tips bar */}
                             <div className="flex items-center gap-4 glass rounded-2xl px-5 py-3 shadow-lg">
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                                    <RotateCcw size={12} className="text-gray-400" /> Drag
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                    <RotateCcw size={12} style={{ color: "rgba(255,255,255,0.4)" }} /> Drag
                                 </div>
-                                <div className="w-px h-4 bg-gray-200" />
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                                    <Hand size={12} className="text-gray-400" /> Pinch
+                                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.12)" }} />
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                    <Hand size={12} style={{ color: "rgba(255,255,255,0.4)" }} /> Pinch
                                 </div>
-                                <div className="w-px h-4 bg-gray-200" />
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                                    <Move size={12} className="text-gray-400" /> Slide
+                                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.12)" }} />
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                    <Move size={12} style={{ color: "rgba(255,255,255,0.4)" }} /> Slide
                                 </div>
                             </div>
                         </motion.div>
 
-                        {/* Vertical Y-axis slider — absolute positioned to align with the exit button gutter */}
+                        {/* Vertical Y-axis slider */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -411,7 +445,7 @@ export default function FeedView({
                             className="absolute right-4 top-[32%] z-50 pointer-events-none flex flex-col items-center gap-1 w-11"
                             style={{ height: 220 }}
                         >
-                            <span className="text-[14px] font-black text-black">↑</span>
+                            <span className="text-[14px] font-black text-[#F5F0EB]">↑</span>
                             <div className="relative flex-1 flex items-center justify-center w-full min-h-[200px]">
                                 <input
                                     type="range"
@@ -425,7 +459,7 @@ export default function FeedView({
                                     style={{ width: "200px", zIndex: 60 }}
                                 />
                             </div>
-                            <span className="text-[14px] font-black text-black">↓</span>
+                            <span className="text-[14px] font-black text-[#F5F0EB]">↓</span>
                         </motion.div>
                     </>
                 )}
@@ -435,7 +469,7 @@ export default function FeedView({
             <AnimatePresence>
                 {!hasInteracted3D && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ delay: 2 }} className="absolute top-[38%] left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2">
-                        <div className="glass rounded-full text-gray-700 text-[11px] font-semibold uppercase tracking-widest px-5 py-2.5 flex items-center gap-2">
+                        <div className="glass rounded-full text-[11px] font-semibold uppercase tracking-widest px-5 py-2.5 flex items-center gap-2" style={{ color: "rgba(255,255,255,0.7)" }}>
                             <motion.span animate={{ rotateZ: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="inline-block text-sm">↻</motion.span>
                             Drag to explore
                         </div>
@@ -446,20 +480,20 @@ export default function FeedView({
             {/* ── RIGHT SIDEBAR (44px touch targets) ── */}
             <div className={`absolute right-2 z-30 pointer-events-auto flex flex-col items-center gap-2.5 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 12px)" }}>
                 <div className="relative mb-1">
-                    <div className="w-11 h-11 rounded-full border-[1.5px] border-gray-200 bg-white flex items-center justify-center font-bold text-[14px] text-gray-800 shadow-sm overflow-hidden p-1">
+                    <div className="w-11 h-11 rounded-full border-[1.5px] flex items-center justify-center font-bold text-[14px] shadow-sm overflow-hidden p-1" style={{ borderColor: "rgba(255,255,255,0.15)", background: "rgba(26,23,20,0.85)" }}>
                         {currentCampaign.iconPath ? (
-                            <svg viewBox="0 0 24 24" className="w-6 h-6" style={{ fill: currentCampaign.iconHex || '#000' }}>
+                            <svg viewBox="0 0 24 24" className="w-6 h-6" style={{ fill: currentCampaign.iconHex || '#fff' }}>
                                 <path d={currentCampaign.iconPath} />
                             </svg>
                         ) : currentCampaign.brandLogo ? (
-                            <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="w-full h-full object-contain mix-blend-multiply" />
+                            <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="w-full h-full object-contain brightness-200 contrast-200" />
                         ) : (
-                            currentCampaign.brand.charAt(0)
+                            <span style={{ color: "rgba(255,255,255,0.7)" }}>{currentCampaign.brand.charAt(0)}</span>
                         )}
                     </div>
                 </div>
                 <SideBtn
-                    icon={<Heart size={22} strokeWidth={isLiked ? 0 : 2} className={isLiked ? "fill-[#F43F5E] text-[#F43F5E]" : "text-gray-700"} />}
+                    icon={<Heart size={22} strokeWidth={isLiked ? 0 : 2} className={isLiked ? "fill-[#F43F5E] text-[#F43F5E]" : ""} style={{ color: isLiked ? undefined : "rgba(255,255,255,0.7)" }} />}
                     label={String(currentCampaign.backers ?? 0)}
                     ariaLabel={isLiked ? "Unlike this product" : "Like this product"}
                     onClick={() => {
@@ -468,13 +502,13 @@ export default function FeedView({
                     }}
                 />
                 <SideBtn
-                    icon={<MessageCircle size={22} className="text-gray-700" />}
+                    icon={<MessageCircle size={22} style={{ color: "rgba(255,255,255,0.7)" }} />}
                     label={currentCampaign.squadsCount}
                     ariaLabel="Open comments"
                     onClick={() => { setActiveSheet("comments"); }}
                 />
                 <SideBtn
-                    icon={<Bookmark size={20} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-gray-900 text-gray-900" : "text-gray-700"} />}
+                    icon={<Bookmark size={20} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-[#F5F0EB]" : ""} style={{ color: "rgba(255,255,255,0.7)" }} />}
                     label="Save"
                     ariaLabel={isSaved ? "Remove from saved" : "Save this product"}
                     onClick={() => {
@@ -483,15 +517,18 @@ export default function FeedView({
                     }}
                 />
                 <SideBtn
-                    icon={<Share2 size={20} className="text-gray-700" />}
+                    icon={<Share2 size={20} style={{ color: "rgba(255,255,255,0.7)" }} />}
                     label="Share"
                     ariaLabel="Share this product"
                     onClick={() => { handleShare(); }}
                 />
             </div>
 
-            {/* ── BOTTOM INFO ── */}
-            <div className={`absolute left-0 right-[60px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 8px)" }}>
+            {/* ── BOTTOM INFO — 3-Slide Carousel ── */}
+            <div
+                className={`absolute left-0 right-[60px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`}
+                style={{ bottom: "calc(var(--nav-height) + 8px)" }}
+            >
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentCampaign.id}
@@ -499,84 +536,232 @@ export default function FeedView({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="glass-heavy p-3.5 rounded-[var(--radius-lg)]"
+                        className="glass-heavy rounded-[var(--radius-lg)] overflow-hidden"
+                        onTouchStart={handleCarouselTouchStart}
+                        onTouchEnd={handleCarouselTouchEnd}
                     >
-                        <div className="flex items-center gap-2 mb-1.5 w-fit">
-                            {currentCampaign.iconPath ? (
-                                <div className="h-6 w-6 flex items-center justify-center bg-transparent rounded-md">
-                                    <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ fill: currentCampaign.iconHex || '#000' }}>
-                                        <path d={currentCampaign.iconPath} />
-                                    </svg>
-                                </div>
-                            ) : currentCampaign.brandLogo ? (
-                                <div className="h-6 flex items-center bg-transparent rounded-md">
-                                    <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="h-5 object-contain" />
-                                </div>
-                            ) : (
-                                <span className="text-gray-500 font-semibold text-[11px] uppercase tracking-wider">{currentCampaign.brand}</span>
-                            )}
-                            <LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact />
-                        </div>
+                        {/* Slide container */}
+                        <div className="overflow-hidden">
+                            <motion.div
+                                animate={{ x: `-${cardSlide * 100}%` }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                className="flex"
+                                style={{ width: `${(maxSlide + 1) * 100}%` }}
+                            >
+                                {/* ── SLIDE 0: Brand Overview ── */}
+                                <div className="p-3.5" style={{ width: `${100 / (maxSlide + 1)}%` }}>
+                                    <div className="flex items-center gap-2 mb-1.5 w-fit">
+                                        {currentCampaign.iconPath ? (
+                                            <div className="h-6 w-6 flex items-center justify-center bg-transparent rounded-md">
+                                                <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ fill: currentCampaign.iconHex || '#fff' }}>
+                                                    <path d={currentCampaign.iconPath} />
+                                                </svg>
+                                            </div>
+                                        ) : currentCampaign.brandLogo ? (
+                                            <div className="h-6 flex items-center bg-transparent rounded-md">
+                                                <img src={currentCampaign.brandLogo} alt={currentCampaign.brand} className="h-5 object-contain brightness-200" />
+                                            </div>
+                                        ) : (
+                                            <span className="font-semibold text-[11px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>{currentCampaign.brand}</span>
+                                        )}
+                                        <LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact />
+                                    </div>
 
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                            <h2 className="text-gray-900 font-bold text-[15px] tracking-tight leading-none">
-                                {currentCampaign.title}
-                            </h2>
-                            <CheckCircle2 size={12} className="text-blue-500 shrink-0" />
-                        </div>
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        <h2 className="font-bold text-[15px] tracking-tight leading-none" style={{ color: "#F5F0EB" }}>
+                                            {currentCampaign.title}
+                                        </h2>
+                                        <CheckCircle2 size={12} className="shrink-0" style={{ color: currentCampaign.color }} />
+                                    </div>
 
-                        <p className="text-gray-600 text-[11px] font-medium leading-snug mb-2 line-clamp-2">
-                            {currentCampaign.description}
-                        </p>
-
-                        <div className="pointer-events-auto">
-                            {/* Progress Bar — taller and more visible */}
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${progressPercent}%` }}
-                                        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                                        className="h-full rounded-full"
-                                        style={{ backgroundColor: currentCampaign.color }}
-                                    />
-                                </div>
-                                <span className="text-gray-900 text-[10px] font-bold tabular-nums">
-                                    {Math.round(progressPercent)}%
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 mt-1.5">
-                                {/* Pledge Now Button */}
-                                <motion.button
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={handlePledge}
-                                    className="flex-[2] py-2 px-3 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
-                                    style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
-                                    aria-label={`Pledge for ${currentCampaign.title}`}
-                                >
-                                    {pledgeConfirm ? (
-                                        <><CheckCircle2 size={14} /> Locked</>
-                                    ) : (
-                                        <>Pledge Now</>
+                                    {currentCampaign.brandPrompt && (
+                                        <p className="text-[11px] font-medium leading-snug mb-2 line-clamp-2 italic" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                            &ldquo;{currentCampaign.brandPrompt}&rdquo;
+                                        </p>
                                     )}
-                                </motion.button>
+                                    {!currentCampaign.brandPrompt && (
+                                        <p className="text-[11px] font-medium leading-snug mb-2 line-clamp-2" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                            {currentCampaign.description}
+                                        </p>
+                                    )}
 
-                                {/* Details Button */}
-                                <motion.button
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={() => setActiveSheet("specs")}
-                                    aria-label="View product details"
-                                    className="flex-1 py-2 rounded-[var(--radius-sm)] bg-gray-100 hover:bg-gray-200 text-gray-800 text-[12px] font-semibold transition-all flex items-center justify-center"
-                                >
-                                    Details
-                                </motion.button>
-                            </div>
+                                    {/* Pledge button */}
+                                    <div className="pointer-events-auto flex items-center gap-2 mt-1.5">
+                                        <motion.button
+                                            whileTap={{ scale: 0.96 }}
+                                            onClick={handlePledge}
+                                            className="flex-[2] py-2 px-3 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
+                                            style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
+                                            aria-label={`Pledge for ${currentCampaign.title}`}
+                                        >
+                                            {pledgeConfirm ? <><CheckCircle2 size={14} /> Locked</> : <>Pledge Now</>}
+                                        </motion.button>
+                                        <motion.button
+                                            whileTap={{ scale: 0.96 }}
+                                            onClick={() => setActiveSheet("specs")}
+                                            aria-label="View product details"
+                                            className="flex-1 py-2 rounded-[var(--radius-sm)] text-[12px] font-semibold transition-all flex items-center justify-center"
+                                            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
+                                        >
+                                            Details
+                                        </motion.button>
+                                    </div>
+                                </div>
 
-                            <div className="flex items-center justify-center w-full gap-1 mt-1.5">
-                                <ShieldCheck size={10} className="text-emerald-500 shrink-0" />
-                                <span className="text-gray-500 text-[10px] font-semibold">Fully refundable until {currentCampaign.deadline}</span>
+                                {/* ── SLIDE 1: Campaign Details ── */}
+                                {maxSlide >= 1 && (
+                                    <div className="p-3.5" style={{ width: `${100 / (maxSlide + 1)}%` }}>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: "rgba(255,255,255,0.35)" }}>Campaign Details</div>
+
+                                        <div className="grid grid-cols-3 gap-2 mb-3">
+                                            {currentCampaign.deliveryDate && (
+                                                <div className="rounded-[var(--radius-sm)] p-2 text-center" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)" }}>
+                                                    <Calendar size={12} className="mx-auto mb-1" style={{ color: "#F59E0B" }} />
+                                                    <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Ships</div>
+                                                    <div className="text-[11px] font-bold" style={{ color: "#F59E0B" }}>{currentCampaign.deliveryDate}</div>
+                                                </div>
+                                            )}
+                                            {currentCampaign.minOrders && (
+                                                <div className="rounded-[var(--radius-sm)] p-2 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                                    <Package size={12} className="mx-auto mb-1" style={{ color: "rgba(255,255,255,0.5)" }} />
+                                                    <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Min Orders</div>
+                                                    <div className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.8)" }}>{currentCampaign.minOrders.toLocaleString()}</div>
+                                                </div>
+                                            )}
+                                            {currentCampaign.backers && (
+                                                <div className="rounded-[var(--radius-sm)] p-2 text-center" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                                                    <Users size={12} className="mx-auto mb-1" style={{ color: "#22C55E" }} />
+                                                    <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Backers</div>
+                                                    <div className="text-[11px] font-bold" style={{ color: "#22C55E" }}>{currentCampaign.backers.toLocaleString()}</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Progress bar */}
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${progressPercent}%` }}
+                                                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                                                    className="h-full rounded-full"
+                                                    style={{ backgroundColor: currentCampaign.color }}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-bold tabular-nums" style={{ color: "rgba(255,255,255,0.7)" }}>
+                                                {Math.round(progressPercent)}%
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                                ${currentCampaign.pledged.toLocaleString()} raised
+                                            </span>
+                                            <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>
+                                                Goal: ${currentCampaign.goal.toLocaleString()}
+                                            </span>
+                                        </div>
+
+                                        <div className="pointer-events-auto mt-2">
+                                            <motion.button
+                                                whileTap={{ scale: 0.96 }}
+                                                onClick={handlePledge}
+                                                className="w-full py-2 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white"
+                                                style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
+                                                aria-label={`Pledge for ${currentCampaign.title}`}
+                                            >
+                                                {pledgeConfirm ? <><CheckCircle2 size={14} /> Locked</> : <>Pledge Now · {currentCampaign.deadline} left</>}
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── SLIDE 2: Design Concept + CTA ── */}
+                                {maxSlide >= 2 && (
+                                    <div className="p-3.5" style={{ width: `${100 / (maxSlide + 1)}%` }}>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>Design Concept</div>
+
+                                        {/* Mockup card */}
+                                        <div
+                                            className="rounded-[var(--radius-md)] p-3 mb-2.5 relative overflow-hidden"
+                                            style={{
+                                                background: `linear-gradient(135deg, ${currentCampaign.color}12, ${currentCampaign.color}05)`,
+                                                border: `1px solid ${currentCampaign.color}25`,
+                                            }}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div className="shrink-0 w-10 h-10 rounded-[var(--radius-sm)] flex items-center justify-center" style={{ background: `${currentCampaign.color}20` }}>
+                                                    {currentCampaign.emoji ? (
+                                                        <span className="text-xl">{currentCampaign.emoji}</span>
+                                                    ) : (
+                                                        <Package size={18} style={{ color: currentCampaign.color }} />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[12px] font-bold mb-1 truncate" style={{ color: "#F5F0EB" }}>{currentCampaign.title}</div>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {(currentCampaign.variants ?? currentCampaign.specs.slice(0, 3)).map((v, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                                                                style={{ background: `${currentCampaign.color}20`, color: currentCampaign.color, border: `1px solid ${currentCampaign.color}35` }}
+                                                            >
+                                                                {typeof v === "string" ? v.split(" ").slice(0, 2).join(" ") : v.label}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pointer-events-auto flex items-center gap-2">
+                                            <motion.button
+                                                whileTap={{ scale: 0.96 }}
+                                                onClick={handlePledge}
+                                                className="flex-[2] py-2 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white"
+                                                style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
+                                                aria-label={`Pledge for ${currentCampaign.title}`}
+                                            >
+                                                {pledgeConfirm ? <><CheckCircle2 size={14} /> Locked</> : <>Back This Concept</>}
+                                            </motion.button>
+                                            <motion.button
+                                                whileTap={{ scale: 0.96 }}
+                                                onClick={() => setActiveSheet("specs")}
+                                                className="flex-1 py-2 rounded-[var(--radius-sm)] text-[12px] font-semibold flex items-center justify-center"
+                                                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
+                                                aria-label="View specs"
+                                            >
+                                                Specs
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </div>
+
+                        {/* Slide indicators + trust badge row */}
+                        <div className="flex items-center justify-between px-3.5 pb-3">
+                            <div className="flex items-center gap-1">
+                                {ShieldCheck && <ShieldCheck size={10} className="text-emerald-500 shrink-0" />}
+                                <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>Zero-risk escrow</span>
                             </div>
+                            {maxSlide > 0 && (
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: maxSlide + 1 }).map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCardSlide(i)}
+                                            aria-label={`Go to slide ${i + 1}`}
+                                            className="rounded-full transition-all"
+                                            style={{
+                                                width: cardSlide === i ? 16 : 6,
+                                                height: 6,
+                                                background: cardSlide === i ? currentCampaign.color : "rgba(255,255,255,0.2)",
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -586,31 +771,31 @@ export default function FeedView({
             <AnimatePresence>
                 {activeSheet !== "none" && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-40 pointer-events-auto" onClick={() => setActiveSheet("none")}>
-                        <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                         <motion.div
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             onClick={e => e.stopPropagation()}
-                            className="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[var(--radius-xl)] border-t border-gray-200 flex flex-col overflow-hidden"
-                            style={{ boxShadow: "0 -10px 40px rgba(0,0,0,0.1)" }}
+                            className="absolute bottom-0 left-0 right-0 h-[65vh] rounded-t-[var(--radius-xl)] flex flex-col overflow-hidden"
+                            style={{ background: "#1A1714", borderTop: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 -10px 40px rgba(0,0,0,0.5)" }}
                         >
                             <div
                                 className="flex justify-center pt-4 pb-2 cursor-grab"
                                 onTouchStart={(e) => { sheetStartY.current = e.touches[0].clientY; }}
                                 onTouchEnd={(e) => { const dy = e.changedTouches[0].clientY - sheetStartY.current; if (dy > 60) setActiveSheet("none"); }}
-                            ><div className="w-12 h-1.5 bg-gray-300 rounded-full" /></div>
+                            ><div className="w-12 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.2)" }} /></div>
 
-                            <div className="flex justify-between items-center px-6 pb-4 border-b border-gray-100 mt-2">
-                                <h3 className="text-lg font-bold text-gray-900">
+                            <div className="flex justify-between items-center px-6 pb-4 mt-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                                <h3 className="text-lg font-bold" style={{ color: "#F5F0EB" }}>
                                     {activeSheet === "specs" ? "Product Details" : activeSheet === "squads" ? "Backers" : "Community Reviews"}
                                 </h3>
                                 <button
                                     onClick={() => setActiveSheet("none")}
                                     aria-label="Close panel"
-                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-600"
-                                    style={{ minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
+                                    className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+                                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
                                 ><X size={18} /></button>
                             </div>
 
@@ -618,23 +803,23 @@ export default function FeedView({
                                 {activeSheet === "specs" && (
                                     <div className="space-y-4">
                                         {currentCampaign.specs.map((s: string, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 bg-gray-50 rounded-[var(--radius-md)] p-4 border border-gray-100">
+                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 rounded-[var(--radius-md)] p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                                                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: currentCampaign.color }} />
-                                                <span className="font-semibold text-sm text-gray-800">{s}</span>
+                                                <span className="font-semibold text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>{s}</span>
                                             </motion.div>
                                         ))}
                                         {currentCampaign.variants && currentCampaign.variants.length > 0 && (
                                             <div className="mt-8">
-                                                <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-4">Available Options</div>
+                                                <div className="text-[11px] font-bold uppercase tracking-wider mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>Available Options</div>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {currentCampaign.variants.map(v => {
                                                         const total = currentCampaign.variants!.reduce((a, b) => a + b.votes, 0);
                                                         const pct = Math.round((v.votes / total) * 100);
                                                         return (
-                                                            <div key={v.id} className="bg-gray-50 rounded-[var(--radius-md)] p-4 border border-gray-200 text-center transition-transform hover:scale-105 shadow-sm">
-                                                                {v.hex && <div className="w-full h-6 rounded-md mb-3 border border-gray-200/50" style={{ backgroundColor: v.hex }} />}
-                                                                <div className="text-[12px] font-semibold text-gray-800">{v.label}</div>
-                                                                <div className="text-[11px] text-gray-500 mt-1">{pct}% backed</div>
+                                                            <div key={v.id} className="rounded-[var(--radius-md)] p-4 text-center transition-transform hover:scale-105 shadow-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                                                                {v.hex && <div className="w-full h-6 rounded-md mb-3 border" style={{ backgroundColor: v.hex, borderColor: "rgba(255,255,255,0.1)" }} />}
+                                                                <div className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.8)" }}>{v.label}</div>
+                                                                <div className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{pct}% backed</div>
                                                             </div>
                                                         );
                                                     })}
@@ -646,9 +831,9 @@ export default function FeedView({
 
                                 {activeSheet === "squads" && (
                                     <div className="space-y-4">
-                                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-[var(--radius-xl)] p-6 border border-gray-200 text-center relative overflow-hidden mb-6">
+                                        <div className="rounded-[var(--radius-xl)] p-6 text-center relative overflow-hidden mb-6" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                                             <div className="relative z-10">
-                                                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5">
+                                                <div className="text-[11px] font-bold uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
                                                     <Zap size={14} className="text-amber-500" /> Total Pledged
                                                 </div>
                                                 <div className="text-4xl font-black tracking-tight" style={{ color: currentCampaign.color }}>
@@ -656,14 +841,14 @@ export default function FeedView({
                                                 </div>
                                             </div>
                                         </div>
-                                        <h4 className="text-sm font-bold text-gray-900 mb-4">Top Groups</h4>
+                                        <h4 className="text-sm font-bold mb-4" style={{ color: "#F5F0EB" }}>Top Groups</h4>
                                         {currentCampaign.squads.map((sq: Squad, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center bg-white rounded-[var(--radius-md)] p-4 border border-gray-200 shadow-sm" style={{ borderLeft: `3px solid ${currentCampaign.color}` }}>
+                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center rounded-[var(--radius-md)] p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderLeft: `3px solid ${currentCampaign.color}` }}>
                                                 <div>
-                                                    <span className="font-bold text-sm text-gray-900">{sq.name}</span>
-                                                    {sq.members && <span className="text-[12px] text-gray-500 ml-2">{sq.members} members</span>}
+                                                    <span className="font-bold text-sm" style={{ color: "#F5F0EB" }}>{sq.name}</span>
+                                                    {sq.members && <span className="text-[12px] ml-2" style={{ color: "rgba(255,255,255,0.4)" }}>{sq.members} members</span>}
                                                 </div>
-                                                <span className="font-bold text-gray-800 text-sm">{sq.amount}</span>
+                                                <span className="font-bold text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>{sq.amount}</span>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -678,16 +863,17 @@ export default function FeedView({
                                             { user: "Anna K.", avatar: "A", text: "Backed! Need this ASAP.", time: "12h", likes: 67 },
                                         ].map((c, i) => (
                                             <motion.div key={`seed-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-500 shrink-0 border border-gray-200">{c.avatar}</div>
-                                                <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>{c.avatar}</div>
+                                                <div className="flex-1 min-w-0 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-sm text-gray-900">{c.user}</span>
-                                                        <span className="text-[12px] text-gray-400">{c.time}</span>
+                                                        <span className="font-bold text-sm" style={{ color: "#F5F0EB" }}>{c.user}</span>
+                                                        <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.3)" }}>{c.time}</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
+                                                    <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>{c.text}</p>
                                                     <button
                                                         aria-label={`Like comment by ${c.user}`}
-                                                        className="text-[12px] text-gray-500 mt-2 flex items-center gap-1.5 hover:text-rose-500 transition-colors"
+                                                        className="text-[12px] mt-2 flex items-center gap-1.5 transition-colors hover:text-rose-400"
+                                                        style={{ color: "rgba(255,255,255,0.35)" }}
                                                     ><Heart size={14} /> {c.likes}</button>
                                                 </div>
                                             </motion.div>
@@ -697,24 +883,25 @@ export default function FeedView({
                                         {(userComments[currentCampaign.id] ?? []).map((c, i) => (
                                             <motion.div key={`user-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-4">
                                                 <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0 shadow-sm" style={{ backgroundColor: currentCampaign.color }}>{c.user[0]}</div>
-                                                <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
+                                                <div className="flex-1 min-w-0 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-sm text-gray-900">{c.user}</span>
-                                                        <span className="text-[12px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full font-medium">Just now</span>
+                                                        <span className="font-bold text-sm" style={{ color: "#F5F0EB" }}>{c.user}</span>
+                                                        <span className="text-[12px] px-2 py-0.5 rounded-full font-medium" style={{ color: currentCampaign.color, background: `${currentCampaign.color}20` }}>Just now</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
+                                                    <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>{c.text}</p>
                                                 </div>
                                             </motion.div>
                                         ))}
 
-                                        <div className="sticky bottom-0 pt-4 pb-safe bg-white -mx-6 px-6 border-t border-gray-100 flex items-center gap-3">
+                                        <div className="sticky bottom-0 pt-4 pb-safe -mx-6 px-6 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "#1A1714" }}>
                                             <input
                                                 value={commentInput}
                                                 onChange={(e) => setCommentInput(e.target.value)}
                                                 onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
                                                 placeholder="Ask a question or leave a comment..."
                                                 aria-label="Write a comment"
-                                                className="flex-1 bg-gray-100 rounded-full px-5 py-3.5 text-sm text-gray-900 outline-none placeholder-gray-500 border border-transparent focus:border-gray-300 focus:bg-white transition-all shadow-inner"
+                                                className="flex-1 rounded-full px-5 py-3.5 text-sm outline-none transition-all"
+                                                style={{ background: "rgba(255,255,255,0.08)", color: "#F5F0EB", border: "1px solid rgba(255,255,255,0.1)" }}
                                             />
                                             <button
                                                 onClick={handlePostComment}
@@ -747,7 +934,7 @@ function SideBtn({ icon, label, ariaLabel, onClick }: { icon: React.ReactNode; l
             <div className="glass-surface p-2.5 rounded-full flex items-center justify-center" style={{ minWidth: 44, minHeight: 44 }}>
                 {icon}
             </div>
-            <span className="text-gray-600 text-[11px] font-semibold tracking-wide">{label}</span>
+            <span className="text-[11px] font-semibold tracking-wide" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
         </motion.button>
     );
 }
