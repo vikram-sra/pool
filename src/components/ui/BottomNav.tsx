@@ -1,14 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Compass, User, PenTool } from "lucide-react";
+import { ArrowUpRight, Wand2, Globe2, Waves } from "lucide-react";
 import type { TabId } from "@/types";
 
-const TABS: { id: TabId; icon: typeof Activity; label: string }[] = [
-    { id: "FEED", icon: Activity, label: "Feed" },
-    { id: "PITCH", icon: PenTool, label: "Pitch" },
-    { id: "ECOSYSTEM", icon: Compass, label: "Ecosystem" },
-    { id: "PROFILE", icon: User, label: "Me" },
+const TABS: { id: TabId; icon: typeof ArrowUpRight; label: string; special?: boolean }[] = [
+    { id: "PITCH", icon: Wand2, label: "Pitch", special: true },
+    { id: "FEED", icon: ArrowUpRight, label: "Feed" },
+    { id: "ECOSYSTEM", icon: Globe2, label: "Explore" },
+    { id: "PROFILE", icon: Waves, label: "My Pool" },
 ];
 
 interface BottomNavProps {
@@ -18,16 +18,22 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ currentTab, setCurrentTab, hidden }: BottomNavProps) {
-    const isPitch = currentTab === "PITCH";
-
     return (
         <nav
-            className={`fixed bottom-0 left-0 right-0 w-full pointer-events-auto transition-all duration-300 ease-out z-50 ${hidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
-                }`}
+            aria-label="Main navigation"
+            className={`fixed bottom-0 left-0 right-0 w-full pointer-events-auto transition-all duration-300 ease-out z-50 ${hidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
         >
-            <div className="flex items-end justify-around px-2 pt-3 pb-safe bg-white/85 backdrop-blur-xl border-t border-gray-200/60 shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
+            <div
+                className="flex items-end justify-around px-3 pt-2 pb-safe"
+                style={{
+                    background: "rgba(255,255,255,0.88)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    borderTop: "1px solid rgba(0,0,0,0.06)",
+                }}
+            >
                 {TABS.map((tab) => (
-                    <NavButton key={tab.id} tab={tab} isActive={currentTab === tab.id} onClick={() => { setCurrentTab(tab.id); }} />
+                    <NavButton key={tab.id} tab={tab} isActive={currentTab === tab.id} onClick={() => setCurrentTab(tab.id)} />
                 ))}
             </div>
         </nav>
@@ -35,30 +41,72 @@ export default function BottomNav({ currentTab, setCurrentTab, hidden }: BottomN
 }
 
 function NavButton({ tab, isActive, onClick }: {
-    tab: { id: string; icon: typeof Activity; label: string };
+    tab: (typeof TABS)[number];
     isActive: boolean;
     onClick: () => void;
 }) {
-    return (
-        <button onClick={onClick} className="flex-1 flex flex-col items-center justify-center gap-1 py-1 relative z-10 outline-none group">
-            <motion.div
-                animate={{ scale: isActive ? 1.1 : 1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"}
+    // Special gradient orb for Pitch
+    if (tab.special) {
+        return (
+            <button
+                onClick={onClick}
+                aria-label="Pitch a new idea"
+                aria-current={isActive ? "page" : undefined}
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 relative z-10 outline-none group"
+                style={{ minHeight: 52 }}
             >
-                <tab.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                <motion.div
+                    animate={{ scale: isActive ? 1.05 : 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className="relative"
+                >
+                    <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center border"
+                        style={{
+                            background: isActive ? "#FFFFFF" : "rgba(0,0,0,0.03)",
+                            borderColor: isActive ? "rgba(79,70,229,0.3)" : "rgba(0,0,0,0.05)",
+                            boxShadow: isActive ? "0 4px 12px rgba(79,70,229,0.15)" : "none",
+                        }}
+                    >
+                        <Wand2 size={18} strokeWidth={2.2} className={isActive ? "text-indigo-600" : "text-gray-400"} />
+                    </div>
+                </motion.div>
+                <span
+                    className={`text-[10px] leading-none tracking-tight mt-1 ${isActive ? "font-bold text-indigo-600" : "font-medium text-gray-400"}`}
+                >
+                    {tab.label}
+                </span>
+            </button>
+        );
+    }
+
+    // Standard 2D icon tabs
+    return (
+        <button
+            onClick={onClick}
+            aria-label={`Navigate to ${tab.label}`}
+            aria-current={isActive ? "page" : undefined}
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 relative z-10 outline-none group"
+            style={{ minHeight: 52 }}
+        >
+            <motion.div
+                animate={{ scale: isActive ? 1.05 : 1, y: isActive ? -1 : 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-500 transition-colors"}
+            >
+                <tab.icon size={21} strokeWidth={isActive ? 2.2 : 1.6} />
             </motion.div>
-            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? "text-blue-600" : "text-gray-500"}`}>
+            <span className={`text-[10px] leading-none tracking-tight ${isActive ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>
                 {tab.label}
             </span>
             <AnimatePresence>
                 {isActive && (
                     <motion.span
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0 }}
+                        initial={{ opacity: 0, scaleX: 0 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        exit={{ opacity: 0, scaleX: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600"
+                        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-gray-900"
                     />
                 )}
             </AnimatePresence>

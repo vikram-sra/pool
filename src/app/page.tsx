@@ -19,6 +19,8 @@ export default function Home() {
   const [currentTab, setCurrentTab] = useState<TabId>("FEED");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZenMode, setIsZenMode] = useState(false);
+  const [zenYOffset, setZenYOffset] = useState(0);
+  const [zenXOffset, setZenXOffset] = useState(0);
   const [hasInteracted3D, setHasInteracted3D] = useState(false);
   const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>({});
 
@@ -78,9 +80,17 @@ export default function Home() {
                   currentCampaign={currentCampaign}
                   currentIndex={currentIndex}
                   currentTab={currentTab}
+                  isZenMode={isZenMode}
+                  zenYOffset={zenYOffset}
+                  zenXOffset={zenXOffset}
                   onInteractionStart={() => { isInteractingWithObject.current = true; setHasInteracted3D(true); }}
                   dragProgressRef={dragProgressRef}
-                  onToggleZen={() => setIsZenMode(prev => !prev)}
+                  onToggleZen={() => {
+                    setIsZenMode(prev => {
+                      if (prev) { setZenYOffset(0); setZenXOffset(0); }
+                      return !prev;
+                    });
+                  }}
                 />
               </Canvas>
             </Suspense>
@@ -105,7 +115,14 @@ export default function Home() {
               isInteractingWithObject={isInteractingWithObject}
               currentTab={currentTab}
               isZenMode={isZenMode}
-              setIsZenMode={setIsZenMode}
+              setIsZenMode={(val: boolean) => {
+                setIsZenMode(val);
+                if (!val) { setZenYOffset(0); setZenXOffset(0); }
+              }}
+              zenYOffset={zenYOffset}
+              setZenYOffset={setZenYOffset}
+              zenXOffset={zenXOffset}
+              setZenXOffset={setZenXOffset}
               hasInteracted3D={hasInteracted3D}
               isPitchOpen={false}
               dragProgressRef={dragProgressRef}

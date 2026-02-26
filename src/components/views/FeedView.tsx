@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ShieldCheck, CheckCircle2, Lock, Users, Zap, Info, X, Share2,
-    Bookmark, MessageCircle, Heart, Maximize2,
+    Bookmark, MessageCircle, Heart, Maximize2, Move, RotateCcw, Hand,
 } from "lucide-react";
 import { CAMPAIGNS } from "@/data/campaigns";
 import { SCROLL_COOLDOWN_MS, SWIPE_COOLDOWN_MS, WHEEL_DELTA_THRESHOLD } from "@/constants";
@@ -19,6 +19,10 @@ interface FeedViewProps {
     currentTab: string;
     isZenMode: boolean;
     setIsZenMode: (val: boolean) => void;
+    zenYOffset: number;
+    setZenYOffset: (val: number) => void;
+    zenXOffset: number;
+    setZenXOffset: (val: number) => void;
     hasInteracted3D: boolean;
     isPitchOpen?: boolean;
     dragProgressRef: React.MutableRefObject<number>;
@@ -27,7 +31,7 @@ interface FeedViewProps {
 
 export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
-    currentTab, isZenMode, setIsZenMode, hasInteracted3D, isPitchOpen, dragProgressRef, pledgeState
+    currentTab, isZenMode, setIsZenMode, zenYOffset, setZenYOffset, zenXOffset, setZenXOffset, hasInteracted3D, isPitchOpen, dragProgressRef, pledgeState
 }: FeedViewProps) {
     const [liked, setLiked] = useState<Record<number, boolean>>({});
     const [saved, setSaved] = useState<Record<number, boolean>>({});
@@ -43,6 +47,10 @@ export default function FeedView({
     const [doubleTapHeart, setDoubleTapHeart] = useState<{ x: number; y: number; id: number } | null>(null);
     const [commentInput, setCommentInput] = useState("");
     const [userComments, setUserComments] = useState<Record<number, Array<{ user: string; text: string }>>>({});
+    const [toast, setToast] = useState<string | null>(null);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [onboardingStep, setOnboardingStep] = useState(0);
+    const [pledgeConfirm, setPledgeConfirm] = useState(false);
     const lastScrollTime = useRef(0);
     const sheetStartY = useRef(0);
 
@@ -53,14 +61,30 @@ export default function FeedView({
     const handleNext = useCallback(() => { setCurrentIndex((p: number) => (p + 1) % CAMPAIGNS.length); }, [setCurrentIndex]);
     const handlePrev = useCallback(() => { setCurrentIndex((p: number) => (p - 1 + CAMPAIGNS.length) % CAMPAIGNS.length); }, [setCurrentIndex]);
 
+    // Show onboarding on first visit
+    useEffect(() => {
+        if (!localStorage.getItem('dp-onboarded')) {
+            setShowOnboarding(true);
+        }
+    }, []);
+
+    const dismissOnboarding = () => {
+        setShowOnboarding(false);
+        localStorage.setItem('dp-onboarded', 'true');
+    };
+
+    // Toast helper
+    const showToast = (msg: string) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 2200);
+    };
+
     // ── WHEEL scroll (desktop) ──
     useEffect(() => {
         const onWheel = (e: WheelEvent) => {
             if (e.ctrlKey || activeSheet !== "none" || showModal || isPitchOpen) return;
             const now = Date.now();
             if (now - lastScrollTime.current < SCROLL_COOLDOWN_MS) return;
-            // Require a deliberate scroll — accumulate delta and only fire once
-            // it clearly exceeds the threshold (prevents trackpad micro-nudges)
             if (Math.abs(e.deltaY) > WHEEL_DELTA_THRESHOLD) {
                 e.deltaY > 0 ? handleNext() : handlePrev();
                 lastScrollTime.current = now;
@@ -70,7 +94,7 @@ export default function FeedView({
         return () => window.removeEventListener("wheel", onWheel);
     }, [activeSheet, showModal, isPitchOpen, handleNext, handlePrev]);
 
-    // ── TOUCH swipe (mobile) — direction-lock gesture system with live drag ──
+    // ── TOUCH swipe (mobile) ──
     useEffect(() => {
         let startY = 0;
         let startX = 0;
@@ -94,7 +118,6 @@ export default function FeedView({
         const onTouchMove = (e: TouchEvent) => {
             if (phase === "swiping") {
                 const dy = e.touches[0].clientY - startY;
-                // * 1.4: need ~70% screen drag to fully reveal adjacent model
                 const raw = -(dy / window.innerHeight) * 1.4;
                 dragProgressRef.current = Math.max(-1, Math.min(1, raw));
                 lastMoveY = e.touches[0].clientY;
@@ -136,10 +159,9 @@ export default function FeedView({
 
             if (now - lastScrollTime.current < SWIPE_COOLDOWN_MS) return;
 
-            // Velocity-based flick: more reliable than time-only detection
             const dt = now - lastMoveTime;
             const recentDy = lastMoveY - endY;
-            const velocity = dt > 0 ? Math.abs(recentDy) / dt : 0; // px/ms
+            const velocity = dt > 0 ? Math.abs(recentDy) / dt : 0;
 
             const isFlick = velocity > 0.3 && Math.abs(totalDist) > 15;
             const isSwipe = Math.abs(totalDist) > 50;
@@ -173,7 +195,14 @@ export default function FeedView({
 
     const handleShare = async () => {
         const data = { title: `${currentCampaign.title} — The Demand Pool`, text: `${currentCampaign.title} by ${currentCampaign.brand}`, url: window.location.href };
-        try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(window.location.href); } catch { }
+        try {
+            if (navigator.share) {
+                await navigator.share(data);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                showToast("Link copied to clipboard");
+            }
+        } catch { }
     };
 
     const handlePostComment = () => {
@@ -182,8 +211,79 @@ export default function FeedView({
         setCommentInput("");
     };
 
+    const handlePledge = () => {
+        setPledgeConfirm(true);
+        setTimeout(() => setPledgeConfirm(false), 2500);
+        showToast("Pledge locked — zero risk, fully refundable");
+    };
+
+    const ONBOARDING_STEPS = [
+        { title: "Welcome to The Demand Pool", desc: "Swipe through products that brands are considering. Your pledge signals real demand." },
+        { title: "Pledge = Power", desc: "Tap \"Pledge Now\" to back a product. Your funds are held in escrow — 100% refundable if the goal isn't met." },
+        { title: "Shape What Gets Made", desc: "Vote on variants, join squads, and pitch your own ideas. Brands listen when there's money behind the signal." },
+    ];
+
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 w-full h-full pointer-events-none">
+
+            {/* ── ONBOARDING OVERLAY ── */}
+            <AnimatePresence>
+                {showOnboarding && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-auto"
+                    >
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismissOnboarding} />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative bg-white rounded-[var(--radius-xl)] p-8 mx-6 max-w-sm w-full shadow-[var(--shadow-elevated)] z-10"
+                        >
+                            <div className="flex items-center gap-2 mb-6">
+                                {ONBOARDING_STEPS.map((_, i) => (
+                                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= onboardingStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                                ))}
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">{ONBOARDING_STEPS[onboardingStep].title}</h3>
+                            <p className="text-sm text-gray-600 leading-relaxed mb-8">{ONBOARDING_STEPS[onboardingStep].desc}</p>
+                            <div className="flex gap-3">
+                                <button onClick={dismissOnboarding} className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+                                    Skip
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (onboardingStep < ONBOARDING_STEPS.length - 1) {
+                                            setOnboardingStep(s => s + 1);
+                                        } else {
+                                            dismissOnboarding();
+                                        }
+                                    }}
+                                    className="flex-1 py-3 rounded-[var(--radius-sm)] bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    {onboardingStep < ONBOARDING_STEPS.length - 1 ? "Next" : "Get Started"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── TOAST ── */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="toast"
+                    >
+                        {toast}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Double-Tap Heart Burst */}
             <AnimatePresence>
@@ -215,43 +315,123 @@ export default function FeedView({
             </div>
 
             {/* ── LIGHT VIGNETTE ── */}
-            <div className="absolute inset-0 pointer-events-none z-[1]">
+            <div className={`absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ${isZenMode ? "opacity-0" : "opacity-100"}`}>
                 <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-white via-white/80 to-transparent" />
                 <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-white/90 via-white/20 to-transparent" />
             </div>
 
             {/* ── TOP BAR ── */}
             <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-150 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
-                <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center bg-gray-100/60 backdrop-blur-xl rounded-full p-1 shadow-sm border border-gray-200/50">
+                <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center glass rounded-full p-0.5">
                         {(["foryou", "trending"] as const).map(tab => (
-                            <button key={tab} onClick={() => setFeedTab(tab)} className={`px-4 py-1.5 rounded-full text-[12px] font-semibold transition-all ${feedTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}>
+                            <button
+                                key={tab}
+                                onClick={() => setFeedTab(tab)}
+                                aria-label={tab === "foryou" ? "Discover feed" : "Trending feed"}
+                                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${feedTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                            >
                                 {tab === "foryou" ? "Discover" : "Trending"}
                             </button>
                         ))}
                     </div>
-                    {/* Minimal Pagination */}
-                    <div className="bg-white/60 backdrop-blur-xl rounded-full px-3 py-1.5 shadow-sm border border-gray-200/50">
-                        <span className="text-[12px] font-semibold text-gray-700 tracking-wide">
-                            {currentIndex + 1} <span className="text-gray-400 mx-0.5">/</span> {CAMPAIGNS.length}
+                    {/* Pagination */}
+                    <div className="glass rounded-full px-2.5 py-1.5">
+                        <span className="text-[11px] font-semibold text-gray-700 tabular-nums">
+                            {currentIndex + 1}<span className="text-gray-400 mx-0.5">/</span>{CAMPAIGNS.length}
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* ── ZEN MODE EXIT ── */}
+            {/* ── ZEN MODE EXIT + CONTROLS ── */}
             <AnimatePresence>
                 {isZenMode && (
-                    <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.15 }}
-                        onClick={() => setIsZenMode(false)}
-                        className="absolute top-14 right-4 z-50 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center shadow-md pointer-events-auto border border-gray-200"
-                    >
-                        <X size={20} className="text-gray-800" />
-                    </motion.button>
+                    <>
+                        {/* Exit button */}
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={() => setIsZenMode(false)}
+                            aria-label="Exit zen mode"
+                            className="absolute top-14 right-4 z-50 w-11 h-11 rounded-full glass flex items-center justify-center shadow-md pointer-events-auto"
+                        >
+                            <X size={20} className="text-gray-800" />
+                        </motion.button>
+
+                        {/* Control tips — animated up from bottom */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 40 }}
+                            transition={{ duration: 0.4, delay: 0.15 }}
+                            className="absolute left-0 right-0 z-50 pointer-events-none flex flex-col items-center gap-3 px-4"
+                            style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+                        >
+                            {/* Horizontal X slider */}
+                            <div className="pointer-events-auto flex items-center gap-2.5" style={{ width: 190 }}>
+                                <span className="text-[9px] font-bold text-gray-400">←</span>
+                                <input
+                                    type="range"
+                                    min="-0.8"
+                                    max="0.8"
+                                    step="0.02"
+                                    value={zenXOffset}
+                                    onChange={(e) => setZenXOffset(parseFloat(e.target.value))}
+                                    aria-label="Adjust horizontal position"
+                                    className="zen-slider flex-1"
+                                />
+                                <span className="text-[9px] font-bold text-gray-400">→</span>
+                            </div>
+
+                            {/* Tips bar */}
+                            <div className="flex items-center gap-4 glass rounded-2xl px-5 py-3 shadow-lg">
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <RotateCcw size={12} className="text-gray-400" /> Drag
+                                </div>
+                                <div className="w-px h-4 bg-gray-200" />
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <Hand size={12} className="text-gray-400" /> Pinch
+                                </div>
+                                <div className="w-px h-4 bg-gray-200" />
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <Move size={12} className="text-gray-400" /> Slide
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Vertical Y-axis slider — absolute positioned to align with the exit button gutter */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="absolute right-4 top-[32%] z-50 pointer-events-none flex flex-col items-center gap-1 w-11"
+                            style={{ height: 220 }}
+                        >
+                            <span className="text-[9px] font-bold text-gray-400">↑</span>
+                            <div className="relative flex-1 flex items-center justify-center w-full min-h-[160px]">
+                                <input
+                                    type="range"
+                                    min="-0.8"
+                                    max="0.8"
+                                    step="0.02"
+                                    value={-zenYOffset}
+                                    onChange={(e) => setZenYOffset(-parseFloat(e.target.value))}
+                                    aria-label="Adjust vertical position"
+                                    className="zen-slider pointer-events-auto"
+                                    style={{
+                                        width: 160,
+                                        transform: "rotate(-90deg)",
+                                        margin: 0
+                                    }}
+                                />
+                            </div>
+                            <span className="text-[9px] font-bold text-gray-400">↓</span>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
@@ -259,18 +439,18 @@ export default function FeedView({
             <AnimatePresence>
                 {!hasInteracted3D && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ delay: 2 }} className="absolute top-[38%] left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2">
-                        <div className="bg-white/80 backdrop-blur-md shadow-sm border border-gray-100 rounded-full text-gray-700 text-[10px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center gap-1.5">
-                            <motion.span animate={{ rotateZ: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="inline-block text-xs">↻</motion.span>
+                        <div className="glass rounded-full text-gray-700 text-[11px] font-semibold uppercase tracking-widest px-5 py-2.5 flex items-center gap-2">
+                            <motion.span animate={{ rotateZ: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="inline-block text-sm">↻</motion.span>
                             Drag to explore
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* ── RIGHT SIDEBAR ── */}
-            <div className={`absolute right-3 z-30 pointer-events-auto flex flex-col items-center gap-3 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 16px)" }}>
-                <div className="relative mb-2">
-                    <div className="w-10 h-10 rounded-full border-[1.5px] border-gray-200 bg-white flex items-center justify-center font-bold text-[14px] text-gray-800 shadow-sm overflow-hidden p-1">
+            {/* ── RIGHT SIDEBAR (44px touch targets) ── */}
+            <div className={`absolute right-2 z-30 pointer-events-auto flex flex-col items-center gap-2.5 transition-all duration-150 ${activeSheet !== "none" || isZenMode ? "opacity-0 translate-x-10 pointer-events-none" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 12px)" }}>
+                <div className="relative mb-1">
+                    <div className="w-11 h-11 rounded-full border-[1.5px] border-gray-200 bg-white flex items-center justify-center font-bold text-[14px] text-gray-800 shadow-sm overflow-hidden p-1">
                         {currentCampaign.iconPath ? (
                             <svg viewBox="0 0 24 24" className="w-6 h-6" style={{ fill: currentCampaign.iconHex || '#000' }}>
                                 <path d={currentCampaign.iconPath} />
@@ -282,14 +462,40 @@ export default function FeedView({
                         )}
                     </div>
                 </div>
-                <SideBtn icon={<Heart size={24} strokeWidth={isLiked ? 0 : 2} className={isLiked ? "fill-[#F43F5E] text-[#F43F5E] drop-shadow-sm" : "text-gray-700 drop-shadow-sm"} />} label={String(currentCampaign.backers ?? 0)} onClick={() => { setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked })); }} />
-                <SideBtn icon={<MessageCircle size={24} className="text-gray-700 drop-shadow-sm" />} label={currentCampaign.squadsCount} onClick={() => { setActiveSheet("comments"); }} />
-                <SideBtn icon={<Bookmark size={22} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-gray-900 text-gray-900" : "text-gray-700 drop-shadow-sm"} />} label="Save" onClick={() => { setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved })); }} />
-                <SideBtn icon={<Share2 size={22} className="text-gray-700 drop-shadow-sm" />} label="Share" onClick={() => { handleShare(); }} />
+                <SideBtn
+                    icon={<Heart size={22} strokeWidth={isLiked ? 0 : 2} className={isLiked ? "fill-[#F43F5E] text-[#F43F5E]" : "text-gray-700"} />}
+                    label={String(currentCampaign.backers ?? 0)}
+                    ariaLabel={isLiked ? "Unlike this product" : "Like this product"}
+                    onClick={() => {
+                        setLiked(prev => ({ ...prev, [currentCampaign.id]: !isLiked }));
+                        if (!isLiked) showToast("Added to your likes");
+                    }}
+                />
+                <SideBtn
+                    icon={<MessageCircle size={22} className="text-gray-700" />}
+                    label={currentCampaign.squadsCount}
+                    ariaLabel="Open comments"
+                    onClick={() => { setActiveSheet("comments"); }}
+                />
+                <SideBtn
+                    icon={<Bookmark size={20} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-gray-900 text-gray-900" : "text-gray-700"} />}
+                    label="Save"
+                    ariaLabel={isSaved ? "Remove from saved" : "Save this product"}
+                    onClick={() => {
+                        setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved }));
+                        showToast(isSaved ? "Removed from saved" : "Saved for later");
+                    }}
+                />
+                <SideBtn
+                    icon={<Share2 size={20} className="text-gray-700" />}
+                    label="Share"
+                    ariaLabel="Share this product"
+                    onClick={() => { handleShare(); }}
+                />
             </div>
 
             {/* ── BOTTOM INFO ── */}
-            <div className={`absolute left-0 right-[64px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 12px)" }}>
+            <div className={`absolute left-0 right-[60px] z-20 px-3 transition-all duration-150 ${isZenMode ? "opacity-0 translate-y-6" : "opacity-100"}`} style={{ bottom: "calc(var(--nav-height) + 8px)" }}>
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentCampaign.id}
@@ -297,9 +503,9 @@ export default function FeedView({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="bg-white/95 backdrop-blur-3xl p-3 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100"
+                        className="glass-heavy p-3.5 rounded-[var(--radius-lg)]"
                     >
-                        <div className="flex items-center gap-2 mb-1 w-fit">
+                        <div className="flex items-center gap-2 mb-1.5 w-fit">
                             {currentCampaign.iconPath ? (
                                 <div className="h-6 w-6 flex items-center justify-center bg-transparent rounded-md">
                                     <svg viewBox="0 0 24 24" className="w-4 h-4" style={{ fill: currentCampaign.iconHex || '#000' }}>
@@ -320,17 +526,17 @@ export default function FeedView({
                             <h2 className="text-gray-900 font-bold text-[15px] tracking-tight leading-none">
                                 {currentCampaign.title}
                             </h2>
-                            <CheckCircle2 size={12} className="text-blue-500" />
+                            <CheckCircle2 size={12} className="text-blue-500 shrink-0" />
                         </div>
 
-                        <p className="text-gray-600 text-[10px] font-medium leading-snug mb-2 line-clamp-1">
+                        <p className="text-gray-600 text-[11px] font-medium leading-snug mb-2 line-clamp-2">
                             {currentCampaign.description}
                         </p>
 
                         <div className="pointer-events-auto">
-                            {/* Standard E-commerce Progress Bar */}
+                            {/* Progress Bar — taller and more visible */}
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progressPercent}%` }}
@@ -339,35 +545,41 @@ export default function FeedView({
                                         style={{ backgroundColor: currentCampaign.color }}
                                     />
                                 </div>
-                                <span className="text-gray-900 text-[10px] font-semibold">
+                                <span className="text-gray-900 text-[10px] font-bold tabular-nums">
                                     {Math.round(progressPercent)}%
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-2 mt-2">
-                                {/* Premium Pre-order Button */}
+                            <div className="flex items-center gap-2 mt-1.5">
+                                {/* Pledge Now Button */}
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
-                                    onClick={() => alert("Pre-order initiated.")}
-                                    className="flex-[2] py-1.5 px-3 rounded-lg flex items-center justify-center gap-2 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
-                                    style={{ backgroundColor: currentCampaign.color }}
+                                    onClick={handlePledge}
+                                    className="flex-[2] py-2 px-3 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
+                                    style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
+                                    aria-label={`Pledge for ${currentCampaign.title}`}
                                 >
-                                    Pre-order now
+                                    {pledgeConfirm ? (
+                                        <><CheckCircle2 size={14} /> Locked</>
+                                    ) : (
+                                        <>Pledge Now</>
+                                    )}
                                 </motion.button>
 
-                                {/* Secondary Button */}
+                                {/* Details Button */}
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
                                     onClick={() => setActiveSheet("specs")}
-                                    className="flex-1 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-[12px] font-semibold transition-all flex items-center justify-center"
+                                    aria-label="View product details"
+                                    className="flex-1 py-2 rounded-[var(--radius-sm)] bg-gray-100 hover:bg-gray-200 text-gray-800 text-[12px] font-semibold transition-all flex items-center justify-center"
                                 >
                                     Details
                                 </motion.button>
                             </div>
 
                             <div className="flex items-center justify-center w-full gap-1 mt-1.5">
-                                <ShieldCheck size={9} className="text-emerald-500" />
-                                <span className="text-gray-400 text-[8px] font-semibold uppercase tracking-wide">Fully refundable until {currentCampaign.deadline}</span>
+                                <ShieldCheck size={10} className="text-emerald-500 shrink-0" />
+                                <span className="text-gray-500 text-[10px] font-semibold">Fully refundable until {currentCampaign.deadline}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -385,7 +597,8 @@ export default function FeedView({
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             onClick={e => e.stopPropagation()}
-                            className="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-3xl border-t border-gray-200 flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                            className="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[var(--radius-xl)] border-t border-gray-200 flex flex-col overflow-hidden"
+                            style={{ boxShadow: "0 -10px 40px rgba(0,0,0,0.1)" }}
                         >
                             <div
                                 className="flex justify-center pt-4 pb-2 cursor-grab"
@@ -394,30 +607,35 @@ export default function FeedView({
                             ><div className="w-12 h-1.5 bg-gray-300 rounded-full" /></div>
 
                             <div className="flex justify-between items-center px-6 pb-4 border-b border-gray-100 mt-2">
-                                <h3 className="text-[18px] font-bold text-gray-900">
+                                <h3 className="text-lg font-bold text-gray-900">
                                     {activeSheet === "specs" ? "Product Details" : activeSheet === "squads" ? "Backers" : "Community Reviews"}
                                 </h3>
-                                <button onClick={() => setActiveSheet("none")} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-600"><X size={18} /></button>
+                                <button
+                                    onClick={() => setActiveSheet("none")}
+                                    aria-label="Close panel"
+                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center text-gray-600"
+                                    style={{ minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
+                                ><X size={18} /></button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto no-scrollbar p-6">
                                 {activeSheet === "specs" && (
                                     <div className="space-y-4">
                                         {currentCampaign.specs.map((s: string, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 bg-gray-50 rounded-[var(--radius-md)] p-4 border border-gray-100">
                                                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: currentCampaign.color }} />
-                                                <span className="font-semibold text-[14px] text-gray-800">{s}</span>
+                                                <span className="font-semibold text-sm text-gray-800">{s}</span>
                                             </motion.div>
                                         ))}
                                         {currentCampaign.variants && currentCampaign.variants.length > 0 && (
                                             <div className="mt-8">
-                                                <div className="text-[12px] font-bold uppercase tracking-wider text-gray-400 mb-4">Available Options</div>
+                                                <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-4">Available Options</div>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {currentCampaign.variants.map(v => {
                                                         const total = currentCampaign.variants!.reduce((a, b) => a + b.votes, 0);
                                                         const pct = Math.round((v.votes / total) * 100);
                                                         return (
-                                                            <div key={v.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 text-center transition-transform hover:scale-105 shadow-sm">
+                                                            <div key={v.id} className="bg-gray-50 rounded-[var(--radius-md)] p-4 border border-gray-200 text-center transition-transform hover:scale-105 shadow-sm">
                                                                 {v.hex && <div className="w-full h-6 rounded-md mb-3 border border-gray-200/50" style={{ backgroundColor: v.hex }} />}
                                                                 <div className="text-[12px] font-semibold text-gray-800">{v.label}</div>
                                                                 <div className="text-[11px] text-gray-500 mt-1">{pct}% backed</div>
@@ -432,7 +650,7 @@ export default function FeedView({
 
                                 {activeSheet === "squads" && (
                                     <div className="space-y-4">
-                                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 text-center relative overflow-hidden mb-6">
+                                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-[var(--radius-xl)] p-6 border border-gray-200 text-center relative overflow-hidden mb-6">
                                             <div className="relative z-10">
                                                 <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5">
                                                     <Zap size={14} className="text-amber-500" /> Total Pledged
@@ -442,14 +660,14 @@ export default function FeedView({
                                                 </div>
                                             </div>
                                         </div>
-                                        <h4 className="text-[14px] font-bold text-gray-900 mb-4">Top Groups</h4>
+                                        <h4 className="text-sm font-bold text-gray-900 mb-4">Top Groups</h4>
                                         {currentCampaign.squads.map((sq: Squad, i: number) => (
-                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center bg-white rounded-xl p-4 border border-gray-200 shadow-sm" style={{ borderLeft: `3px solid ${currentCampaign.color}` }}>
+                                            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex justify-between items-center bg-white rounded-[var(--radius-md)] p-4 border border-gray-200 shadow-sm" style={{ borderLeft: `3px solid ${currentCampaign.color}` }}>
                                                 <div>
-                                                    <span className="font-bold text-[14px] text-gray-900">{sq.name}</span>
+                                                    <span className="font-bold text-sm text-gray-900">{sq.name}</span>
                                                     {sq.members && <span className="text-[12px] text-gray-500 ml-2">{sq.members} members</span>}
                                                 </div>
-                                                <span className="font-bold text-gray-800 text-[14px]">{sq.amount}</span>
+                                                <span className="font-bold text-gray-800 text-sm">{sq.amount}</span>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -458,20 +676,23 @@ export default function FeedView({
                                 {activeSheet === "comments" && (
                                     <div className="space-y-6">
                                         {[
-                                            { user: "Sarah J.", avatar: "S", text: "Just locked in my pre-order! I've been waiting for a reissue for years.", time: "2h", likes: 42 },
+                                            { user: "Sarah J.", avatar: "S", text: "Just locked in my pledge! I've been waiting for a reissue for years.", time: "2h", likes: 42 },
                                             { user: "Tech Reviewer", avatar: "T", text: "The spec sheet looks incredible. If they actually deliver on the battery life, this is a game changer.", time: "4h", likes: 28 },
                                             { user: "David M.", avatar: "D", text: "Love the clean design here.", time: "6h", likes: 15 },
                                             { user: "Anna K.", avatar: "A", text: "Backed! Need this ASAP.", time: "12h", likes: 67 },
                                         ].map((c, i) => (
                                             <motion.div key={`seed-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[14px] text-gray-500 shrink-0 border border-gray-200">{c.avatar}</div>
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-500 shrink-0 border border-gray-200">{c.avatar}</div>
                                                 <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-[14px] text-gray-900">{c.user}</span>
+                                                        <span className="font-bold text-sm text-gray-900">{c.user}</span>
                                                         <span className="text-[12px] text-gray-400">{c.time}</span>
                                                     </div>
-                                                    <p className="text-[14px] text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
-                                                    <button className="text-[12px] text-gray-500 mt-2 flex items-center gap-1.5 hover:text-rose-500 transition-colors"><Heart size={14} /> {c.likes}</button>
+                                                    <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
+                                                    <button
+                                                        aria-label={`Like comment by ${c.user}`}
+                                                        className="text-[12px] text-gray-500 mt-2 flex items-center gap-1.5 hover:text-rose-500 transition-colors"
+                                                    ><Heart size={14} /> {c.likes}</button>
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -479,13 +700,13 @@ export default function FeedView({
                                         {/* User-posted comments */}
                                         {(userComments[currentCampaign.id] ?? []).map((c, i) => (
                                             <motion.div key={`user-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[14px] text-white shrink-0 shadow-sm" style={{ backgroundColor: currentCampaign.color }}>{c.user[0]}</div>
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0 shadow-sm" style={{ backgroundColor: currentCampaign.color }}>{c.user[0]}</div>
                                                 <div className="flex-1 min-w-0 pb-4 border-b border-gray-100">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-[14px] text-gray-900">{c.user}</span>
+                                                        <span className="font-bold text-sm text-gray-900">{c.user}</span>
                                                         <span className="text-[12px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full font-medium">Just now</span>
                                                     </div>
-                                                    <p className="text-[14px] text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
+                                                    <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{c.text}</p>
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -496,9 +717,15 @@ export default function FeedView({
                                                 onChange={(e) => setCommentInput(e.target.value)}
                                                 onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
                                                 placeholder="Ask a question or leave a comment..."
-                                                className="flex-1 bg-gray-100 rounded-full px-5 py-3.5 text-[14px] text-gray-900 outline-none placeholder-gray-500 border border-transparent focus:border-gray-300 focus:bg-white transition-all shadow-inner"
+                                                aria-label="Write a comment"
+                                                className="flex-1 bg-gray-100 rounded-full px-5 py-3.5 text-sm text-gray-900 outline-none placeholder-gray-500 border border-transparent focus:border-gray-300 focus:bg-white transition-all shadow-inner"
                                             />
-                                            <button onClick={handlePostComment} className="text-[14px] font-bold px-4 py-2 rounded-full" style={{ color: currentCampaign.color, backgroundColor: `${currentCampaign.color}15` }}>Post</button>
+                                            <button
+                                                onClick={handlePostComment}
+                                                aria-label="Post comment"
+                                                className="text-sm font-bold px-4 py-2.5 rounded-full"
+                                                style={{ color: currentCampaign.color, backgroundColor: `${currentCampaign.color}15`, minHeight: "var(--min-touch)" }}
+                                            >Post</button>
                                         </div>
                                     </div>
                                 )}
@@ -511,13 +738,20 @@ export default function FeedView({
     );
 }
 
-function SideBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+function SideBtn({ icon, label, ariaLabel, onClick }: { icon: React.ReactNode; label: string; ariaLabel: string; onClick: () => void }) {
     return (
-        <motion.button onClick={onClick} whileHover={{ scale: 1.1, x: -2 }} whileTap={{ scale: 0.9 }} className="flex flex-col items-center gap-1.5 transition-all">
-            <div className="bg-white/60 backdrop-blur-md p-2 rounded-full shadow-sm border border-gray-100/50 flex items-center justify-center">
+        <motion.button
+            onClick={onClick}
+            whileHover={{ scale: 1.1, x: -2 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label={ariaLabel}
+            className="flex flex-col items-center gap-1 transition-all"
+            style={{ minWidth: "var(--min-touch)", minHeight: "var(--min-touch)" }}
+        >
+            <div className="glass-surface p-2.5 rounded-full flex items-center justify-center" style={{ minWidth: 44, minHeight: 44 }}>
                 {icon}
             </div>
-            <span className="text-gray-500 text-[10px] font-semibold tracking-wide drop-shadow-sm">{label}</span>
+            <span className="text-gray-600 text-[11px] font-semibold tracking-wide">{label}</span>
         </motion.button>
     );
 }
