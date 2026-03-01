@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Edit3, Camera, LogOut, Lock, Activity, CheckCircle2, Zap, Shield, Star, Award } from "lucide-react";
+import { Edit3, Camera, LogOut, Lock, Activity, CheckCircle2, Zap, Shield, Star, Award, Flame, Gem, Rocket, Eye, Trophy } from "lucide-react";
 import { USER_PROFILE } from "@/data/campaigns";
 
 export default function ProfileView() {
@@ -61,8 +61,8 @@ export default function ProfileView() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
                                 { label: "Escrowed", value: user.assetsEscrowed, icon: Lock, color: "#111", description: "Funds held safely" },
-                                { label: "Squads", value: String(user.activeSquads).padStart(2, "0"), icon: Star, color: "#2563EB", description: "Groups you belong to" },
-                                { label: "Pledges", value: String(user.pledges.length).padStart(2, "0"), icon: Zap, color: "#059669", description: "Products you've backed" },
+                                { label: "Squads", value: String(user.activeSquads), icon: Star, color: "#2563EB", description: "Groups you belong to" },
+                                { label: "Pledges", value: String(user.pledges.length), icon: Zap, color: "#059669", description: "Products you've backed" },
                                 { label: "Rank", value: "#142", icon: Award, color: "#D97706", description: "Your position" },
                             ].map((s, i) => (
                                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="bg-white rounded-[var(--radius-lg)] p-5 border border-gray-100 shadow-sm">
@@ -117,11 +117,11 @@ export default function ProfileView() {
                             <p className="text-[12px] text-gray-400 mb-5">Badges earned through your activity on the platform.</p>
                             <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                                 {[
-                                    { emoji: "🔥", label: "Early Backer", unlocked: true },
-                                    { emoji: "💎", label: "Diamond Hands", unlocked: true },
-                                    { emoji: "🚀", label: "Launch Day", unlocked: true },
-                                    { emoji: "👁️", label: "Trend Spotter", unlocked: false },
-                                    { emoji: "🏆", label: "Top 100", unlocked: false },
+                                    { Icon: Flame, label: "Early Backer", color: "#F97316", unlocked: true },
+                                    { Icon: Gem, label: "Diamond Hands", color: "#6366F1", unlocked: true },
+                                    { Icon: Rocket, label: "Launch Day", color: "#0EA5E9", unlocked: true },
+                                    { Icon: Eye, label: "Trend Spotter", color: "#8B5CF6", unlocked: false },
+                                    { Icon: Trophy, label: "Top 100", color: "#D97706", unlocked: false },
                                 ].map((badge, i) => (
                                     <motion.div
                                         key={i}
@@ -130,7 +130,9 @@ export default function ProfileView() {
                                         transition={{ delay: 0.3 + i * 0.06 }}
                                         className={`bg-white rounded-[var(--radius-lg)] border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-2 text-center ${!badge.unlocked ? "opacity-30 grayscale" : ""}`}
                                     >
-                                        <span className="text-2xl mb-1">{badge.emoji}</span>
+                                        <div className="w-10 h-10 rounded-[var(--radius-sm)] flex items-center justify-center mb-1" style={{ backgroundColor: `${badge.color}15` }}>
+                                            <badge.Icon size={20} style={{ color: badge.color }} />
+                                        </div>
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">{badge.label}</span>
                                     </motion.div>
                                 ))}

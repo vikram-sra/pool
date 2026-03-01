@@ -127,6 +127,7 @@ export default function Home() {
               isPitchOpen={false}
               dragProgressRef={dragProgressRef}
               pledgeState={pledgeStates[currentCampaign.id] ?? "initiated"}
+              onPledge={handlePledge}
             />
           )}
           {currentTab === "ECOSYSTEM" && <EcosystemView key="ecosystem" />}

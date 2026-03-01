@@ -10,6 +10,10 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 
+  /* ── Neon accent tokens (used in PledgeModal dark theme) ── */
+  --neon-cyan: #00E5FF;
+  --electric-green: #00FF66;
+
   /* ── Design tokens ── */
   --radius-sm: 12px;
   --radius-md: 16px;
@@ -111,6 +115,13 @@ a:focus-visible,
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
+.glass-dark {
+  background: rgba(12, 12, 18, 0.88);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
 /* ── Interactive hover lift ── */
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -188,6 +199,24 @@ a:focus-visible,
   border: 4px solid #000000;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   margin-top: -7px;
+}
+
+/* ── Bottom nav: Pitch badge breathe animation ── */
+@keyframes nav-pitch-breathe {
+  0%, 100% { opacity: 0.65; box-shadow: 0 2px 8px rgba(99,102,241,0.15); }
+  50%       { opacity: 1;    box-shadow: 0 2px 16px rgba(99,102,241,0.35); }
+}
+.nav-pitch-breathe {
+  animation: nav-pitch-breathe 3s ease-in-out infinite;
+}
+
+/* ── Bottom nav: tap ripple burst ── */
+@keyframes nav-tap-ripple {
+  0%   { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+.nav-tap-ripple {
+  animation: nav-tap-ripple 0.45s ease-out forwards;
 }
 
 /* ── Reduced motion (accessibility) ── */
