@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, ShieldCheck, Zap, Users, CheckCircle2 } from "lucide-react";
 import type { Campaign, PledgeState, Variant } from "@/types";
@@ -18,6 +18,10 @@ const AMOUNTS = [50, 100, 250, 500];
 
 export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledgeState }: PledgeModalProps) {
     const [selectedAmount, setSelectedAmount] = useState(100);
+    const [customAmount, setCustomAmount] = useState("");
+    const [useCustom, setUseCustom] = useState(false);
+    const customInputRef = useRef<HTMLInputElement>(null);
+    const effectiveAmount = useCustom && parseInt(customAmount) > 0 ? parseInt(customAmount) : selectedAmount;
     const [selectedVariant, setSelectedVariant] = useState<string | null>(campaign.variants?.[0]?.id ?? null);
     const [selectedSquad, setSelectedSquad] = useState<string | null>(campaign.squads[0]?.name ?? null);
     const [userVote, setUserVote] = useState<string | null>(() => {
@@ -67,7 +71,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto max-h-[calc(90vh-120px)] no-scrollbar px-4 md:px-6 pb-safe space-y-5">
+                        <div className="overflow-y-auto max-h-[calc(90vh-120px)] no-scrollbar px-4 md:px-6 pb-24 space-y-5">
                             {/* Lifecycle */}
                             <div className="glass-dark rounded-xl p-5 border border-white/5 shadow-inner">
                                 <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-4">Campaign Stage</div>
@@ -155,13 +159,13 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                             {/* Amount */}
                             <div>
                                 <div className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-3">Amount</div>
-                                <div className="grid grid-cols-4 gap-2.5">
+                                <div className="grid grid-cols-4 gap-2.5 mb-2.5">
                                     {AMOUNTS.map((amt) => (
                                         <motion.button
                                             key={amt}
-                                            onClick={() => setSelectedAmount(amt)}
+                                            onClick={() => { setSelectedAmount(amt); setUseCustom(false); }}
                                             whileTap={{ scale: 0.95 }}
-                                            className={`py-3.5 rounded-xl font-bold font-mono tracking-widest text-sm transition-all duration-200 border ${selectedAmount === amt
+                                            className={`py-3.5 rounded-xl font-bold font-mono tracking-widest text-sm transition-all duration-200 border ${!useCustom && selectedAmount === amt
                                                 ? "glass bg-white text-black border-transparent shadow-[0_0_20px_rgba(255,255,255,0.4)]"
                                                 : "glass-dark text-white/70 border-white/5 hover:border-white/20 hover:text-white"
                                                 }`}
@@ -169,6 +173,22 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                             ${amt}
                                         </motion.button>
                                     ))}
+                                </div>
+                                {/* Custom amount */}
+                                <div className={`flex items-center gap-2 rounded-xl border px-3.5 transition-all duration-200 ${useCustom ? "border-[var(--neon-cyan)] shadow-[0_0_12px_rgba(0,229,255,0.15)]" : "border-white/5"} glass-dark`}>
+                                    <span className="text-white/40 font-bold font-mono text-sm">$</span>
+                                    <input
+                                        ref={customInputRef}
+                                        type="number"
+                                        min="1"
+                                        max="10000"
+                                        placeholder="Custom amount"
+                                        value={customAmount}
+                                        onFocus={() => setUseCustom(true)}
+                                        onChange={(e) => { setCustomAmount(e.target.value); setUseCustom(true); }}
+                                        className="flex-1 bg-transparent py-3.5 text-sm font-bold font-mono text-white placeholder-white/25 outline-none tracking-widest"
+                                        aria-label="Enter custom pledge amount"
+                                    />
                                 </div>
                             </div>
 
@@ -178,7 +198,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                 <div>
                                     <div className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: '#34D399' }}>Zero-Risk Guarantee</div>
                                     <p className="text-[9px] font-medium text-white/50 leading-relaxed">
-                                        ${selectedAmount} held in secure escrow. <span className="text-white/80 font-bold">100% refundable</span> if the goal isn&apos;t met.
+                                        ${effectiveAmount} held in secure escrow. <span className="text-white/80 font-bold">100% refundable</span> if the goal isn&apos;t met.
                                     </p>
                                 </div>
                             </div>
@@ -188,9 +208,9 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                                 whileHover={pledgeState === "initiated" ? { scale: 1.02, y: -2 } : {}}
                                 whileTap={pledgeState === "initiated" ? { scale: 0.98 } : {}}
                                 onClick={() => onPledge(campaign.id)}
-                                disabled={pledgeState !== "initiated"}
-                                className={`w-full py-4.5 rounded-xl font-black uppercase tracking-widest text-[12px] flex items-center justify-center gap-2 transition-all duration-300 border ${pledgeState === "initiated"
-                                    ? "bg-[var(--electric-green)] text-black border-transparent shadow-[0_0_25px_rgba(0,255,102,0.4)] hover:shadow-[0_0_35px_rgba(0,255,102,0.6)]"
+                                disabled={pledgeState !== "initiated" || (useCustom && !(parseInt(customAmount) > 0))}
+                                className={`w-full py-5 rounded-xl font-black uppercase tracking-widest text-[12px] flex items-center justify-center gap-2 transition-all duration-300 border ${pledgeState === "initiated"
+                                    ? "bg-[var(--electric-green)] text-black border-transparent shadow-[0_0_25px_rgba(0,255,102,0.4)] hover:shadow-[0_0_35px_rgba(0,255,102,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
                                     : pledgeState === "escrowed"
                                         ? "glass bg-white text-black border-transparent"
                                         : "glass-dark border-[var(--electric-green)] text-[var(--electric-green)] shadow-[0_0_15px_rgba(0,255,102,0.2)]"
@@ -198,7 +218,7 @@ export default function PledgeModal({ campaign, isOpen, onClose, onPledge, pledg
                             >
                                 <AnimatePresence mode="popLayout">
                                     <motion.div key={pledgeState} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} className="flex items-center gap-2">
-                                        {pledgeState === "initiated" ? <><Lock size={15} /> Lock ${selectedAmount} in Escrow</> : pledgeState === "escrowed" ? <><Zap size={15} className="animate-spin" /> Securing...</> : <><CheckCircle2 size={15} /> Secured — ${selectedAmount} Locked</>}
+                                        {pledgeState === "initiated" ? <><Lock size={15} /> Lock ${effectiveAmount} in Escrow</> : pledgeState === "escrowed" ? <><Zap size={15} className="animate-spin" /> Securing...</> : <><CheckCircle2 size={15} /> Secured — ${effectiveAmount} Locked</>}
                                     </motion.div>
                                 </AnimatePresence>
                             </motion.button>

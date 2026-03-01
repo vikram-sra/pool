@@ -10,6 +10,7 @@ import { CAMPAIGNS } from "@/data/campaigns";
 import { SCROLL_COOLDOWN_MS, SWIPE_COOLDOWN_MS, WHEEL_DELTA_THRESHOLD } from "@/constants";
 import type { Campaign, PledgeState, Squad } from "@/types";
 import LifecycleTracker from "@/components/ui/LifecycleTracker";
+import PledgeModal from "@/components/ui/PledgeModal";
 
 interface FeedViewProps {
     currentIndex: number;
@@ -27,11 +28,12 @@ interface FeedViewProps {
     isPitchOpen?: boolean;
     dragProgressRef: React.MutableRefObject<number>;
     pledgeState: PledgeState;
+    onPledge: (campaignId: number) => void;
 }
 
 export default function FeedView({
     currentIndex, setCurrentIndex, currentCampaign, isInteractingWithObject,
-    currentTab, isZenMode, setIsZenMode, zenYOffset, setZenYOffset, zenXOffset, setZenXOffset, hasInteracted3D, isPitchOpen, dragProgressRef, pledgeState
+    currentTab, isZenMode, setIsZenMode, zenYOffset, setZenYOffset, zenXOffset, setZenXOffset, hasInteracted3D, isPitchOpen, dragProgressRef, pledgeState, onPledge
 }: FeedViewProps) {
     const [liked, setLiked] = useState<Record<number, boolean>>({});
     const [saved, setSaved] = useState<Record<number, boolean>>({});
@@ -50,7 +52,6 @@ export default function FeedView({
     const [toast, setToast] = useState<string | null>(null);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardingStep, setOnboardingStep] = useState(0);
-    const [pledgeConfirm, setPledgeConfirm] = useState(false);
     const lastScrollTime = useRef(0);
     const sheetStartY = useRef(0);
 
@@ -212,9 +213,7 @@ export default function FeedView({
     };
 
     const handlePledge = () => {
-        setPledgeConfirm(true);
-        setTimeout(() => setPledgeConfirm(false), 2500);
-        showToast("Pledge locked — zero risk, fully refundable");
+        setShowModal(true);
     };
 
     const ONBOARDING_STEPS = [
@@ -237,20 +236,33 @@ export default function FeedView({
                     >
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismissOnboarding} />
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative bg-white rounded-[var(--radius-xl)] p-8 mx-6 max-w-sm w-full shadow-[var(--shadow-elevated)] z-10"
+                            initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.92, opacity: 0, y: 10 }}
+                            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                            className="relative glass-heavy rounded-[var(--radius-xl)] p-7 mx-6 max-w-sm w-full z-10"
+                            style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8)" }}
                         >
-                            <div className="flex items-center gap-2 mb-6">
+                            {/* Step indicators */}
+                            <div className="flex items-center gap-1.5 mb-6">
                                 {ONBOARDING_STEPS.map((_, i) => (
-                                    <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= onboardingStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <motion.div
+                                        key={i}
+                                        animate={{ width: i === onboardingStep ? 28 : 6, opacity: i <= onboardingStep ? 1 : 0.25 }}
+                                        transition={{ duration: 0.25 }}
+                                        className="h-1.5 rounded-full bg-gray-900"
+                                        style={{ minWidth: 6 }}
+                                    />
                                 ))}
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">{ONBOARDING_STEPS[onboardingStep].title}</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed mb-8">{ONBOARDING_STEPS[onboardingStep].desc}</p>
+                            {/* Step icon */}
+                            <div className="w-11 h-11 rounded-[var(--radius-md)] bg-gray-900 flex items-center justify-center mb-5">
+                                {onboardingStep === 0 ? <Zap size={20} className="text-white" /> : onboardingStep === 1 ? <Lock size={20} className="text-white" /> : <Users size={20} className="text-white" />}
+                            </div>
+                            <h3 className="text-[21px] font-bold tracking-tight text-gray-900 leading-tight mb-2.5">{ONBOARDING_STEPS[onboardingStep].title}</h3>
+                            <p className="text-[13px] text-gray-500 leading-relaxed mb-7">{ONBOARDING_STEPS[onboardingStep].desc}</p>
                             <div className="flex gap-3">
-                                <button onClick={dismissOnboarding} className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+                                <button onClick={dismissOnboarding} className="px-5 py-3 rounded-[var(--radius-sm)] text-[13px] font-semibold text-gray-400 hover:text-gray-600 transition-colors">
                                     Skip
                                 </button>
                                 <button
@@ -261,7 +273,7 @@ export default function FeedView({
                                             dismissOnboarding();
                                         }
                                     }}
-                                    className="flex-1 py-3 rounded-[var(--radius-sm)] bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                                    className="flex-1 py-3 rounded-[var(--radius-sm)] bg-gray-900 text-white text-[13px] font-bold hover:bg-gray-800 transition-colors"
                                 >
                                     {onboardingStep < ONBOARDING_STEPS.length - 1 ? "Next" : "Get Started"}
                                 </button>
@@ -329,7 +341,7 @@ export default function FeedView({
                                 key={tab}
                                 onClick={() => setFeedTab(tab)}
                                 aria-label={tab === "foryou" ? "Discover feed" : "Trending feed"}
-                                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${feedTab === tab ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                                className={`px-3 py-1.5 rounded-full text-[11px] transition-all ${feedTab === tab ? "bg-white text-gray-900 font-bold shadow-sm" : "text-gray-400 font-medium hover:text-gray-700"}`}
                             >
                                 {tab === "foryou" ? "Discover" : "Trending"}
                             </button>
@@ -475,7 +487,7 @@ export default function FeedView({
                 />
                 <SideBtn
                     icon={<Bookmark size={20} strokeWidth={isSaved ? 0 : 2} className={isSaved ? "fill-gray-900 text-gray-900" : "text-gray-700"} />}
-                    label="Save"
+                    label={isSaved ? "Saved" : "Save"}
                     ariaLabel={isSaved ? "Remove from saved" : "Save this product"}
                     onClick={() => {
                         setSaved(prev => ({ ...prev, [currentCampaign.id]: !isSaved }));
@@ -500,6 +512,7 @@ export default function FeedView({
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="glass-heavy p-3.5 rounded-[var(--radius-lg)]"
+                        style={{ borderLeft: `3px solid ${currentCampaign.color}` }}
                     >
                         <div className="flex items-center gap-2 mb-1.5 w-fit">
                             {currentCampaign.iconPath ? (
@@ -516,6 +529,9 @@ export default function FeedView({
                                 <span className="text-gray-500 font-semibold text-[11px] uppercase tracking-wider">{currentCampaign.brand}</span>
                             )}
                             <LifecycleTracker currentStage={currentCampaign.lifecycle} color={currentCampaign.color} compact />
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${currentCampaign.color}18`, color: currentCampaign.color }}>
+                                {currentCampaign.lifecycle}
+                            </span>
                         </div>
 
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -530,8 +546,8 @@ export default function FeedView({
                         </p>
 
                         <div className="pointer-events-auto">
-                            {/* Progress Bar — taller and more visible */}
-                            <div className="flex items-center gap-2 mb-2">
+                            {/* Progress Bar */}
+                            <div className="flex items-center gap-2 mb-1">
                                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
@@ -545,18 +561,29 @@ export default function FeedView({
                                     {Math.round(progressPercent)}%
                                 </span>
                             </div>
+                            {/* Goal + backer context */}
+                            <div className="flex justify-between items-center text-[10px] font-semibold text-gray-400 mb-2 tabular-nums">
+                                <span>${currentCampaign.pledged >= 1000 ? `${(currentCampaign.pledged / 1000).toFixed(1)}k` : currentCampaign.pledged} of ${currentCampaign.goal >= 1000 ? `${(currentCampaign.goal / 1000).toFixed(0)}k` : currentCampaign.goal}</span>
+                                <span>{(currentCampaign.backers ?? 0).toLocaleString()} backers</span>
+                            </div>
 
-                            <div className="flex items-center gap-2 mt-1.5">
+                            <div className="flex items-center gap-2 mt-0.5">
                                 {/* Pledge Now Button */}
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
-                                    onClick={handlePledge}
-                                    className="flex-[2] py-2 px-3 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white shadow-sm transition-shadow hover:shadow-md"
-                                    style={{ backgroundColor: pledgeConfirm ? "#059669" : currentCampaign.color }}
+                                    onClick={pledgeState === "initiated" ? handlePledge : undefined}
+                                    disabled={pledgeState !== "initiated"}
+                                    className="flex-[2] py-2 px-3 rounded-[var(--radius-sm)] flex items-center justify-center gap-1.5 font-semibold text-[12px] text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed"
+                                    style={{
+                                        backgroundColor: pledgeState === "locked" ? "#059669" : pledgeState === "escrowed" ? "#888" : currentCampaign.color,
+                                        opacity: pledgeState === "escrowed" ? 0.75 : 1,
+                                    }}
                                     aria-label={`Pledge for ${currentCampaign.title}`}
                                 >
-                                    {pledgeConfirm ? (
-                                        <><CheckCircle2 size={14} /> Locked</>
+                                    {pledgeState === "locked" ? (
+                                        <><CheckCircle2 size={14} /> Pledged</>
+                                    ) : pledgeState === "escrowed" ? (
+                                        <>Securing…</>
                                     ) : (
                                         <>Pledge Now</>
                                     )}
@@ -581,6 +608,15 @@ export default function FeedView({
                     </motion.div>
                 </AnimatePresence>
             </div>
+
+            {/* ── PLEDGE MODAL ── */}
+            <PledgeModal
+                campaign={currentCampaign}
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onPledge={(id) => { onPledge(id); setShowModal(false); showToast("Pledge locked — zero risk, fully refundable"); }}
+                pledgeState={pledgeState}
+            />
 
             {/* ── BOTTOM SHEETS ── */}
             <AnimatePresence>

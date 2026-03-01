@@ -138,21 +138,27 @@ export default function EcosystemView() {
                 {/* Bento Grid Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 
-                    {/* LEFT COL: Live Network Stats */}
+                    {/* LEFT COL: Live Network Stats — slim horizontal strip */}
                     <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-                        <div className="bg-white p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
-                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                                <Zap size={14} />
+                        <div className="col-span-2 bg-white rounded-[var(--radius-lg)] border border-gray-100 px-5 py-3 flex items-center divide-x divide-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
+                            <div className="flex items-center gap-2.5 pr-5">
+                                <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <Zap size={13} />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-bold tracking-wider uppercase text-gray-400 leading-none mb-0.5">Total Escrowed</div>
+                                    <div className="text-xl font-bold tracking-tight text-gray-900 leading-none">$24.8M</div>
+                                </div>
                             </div>
-                            <div className="text-[11px] font-bold tracking-wider uppercase text-gray-400 mb-1">Total Escrowed</div>
-                            <div className="text-3xl font-bold tracking-tight text-gray-900">$24.8M</div>
-                        </div>
-                        <div className="bg-white p-5 rounded-[var(--radius-xl)] border border-gray-100" style={{ boxShadow: "var(--shadow-card)" }}>
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-                                <Users size={14} />
+                            <div className="flex items-center gap-2.5 pl-5">
+                                <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <Users size={13} />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-bold tracking-wider uppercase text-gray-400 leading-none mb-0.5">Active Backers</div>
+                                    <div className="text-xl font-bold tracking-tight text-gray-900 leading-none">142k</div>
+                                </div>
                             </div>
-                            <div className="text-[11px] font-bold tracking-wider uppercase text-gray-400 mb-1">Active Backers</div>
-                            <div className="text-3xl font-bold tracking-tight text-gray-900">142k</div>
                         </div>
 
                         {/* Top Funding Trends */}
