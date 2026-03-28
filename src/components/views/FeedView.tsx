@@ -135,9 +135,11 @@ export default function FeedView({
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 12) return;
 
+            // Give full complete interaction to Object (Allows 360 degree full drag)
             if (isInteractingWithObject.current) { phase = "blocked"; return; }
 
-            if (Math.abs(dy) > Math.abs(dx) * 1.3) {
+            // Negative space dragging:
+            if (Math.abs(dy) > Math.abs(dx) * 1.5) {
                 phase = "swiping";
                 const raw = -(dy / window.innerHeight) * 1.4;
                 dragProgressRef.current = Math.max(-1, Math.min(1, raw));
@@ -326,11 +328,11 @@ export default function FeedView({
                 />
             </div>
 
-            {/* ── LIGHT VIGNETTE ── */}
-            <div className={`absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ${isZenMode ? "opacity-0" : "opacity-100"}`}>
-                <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-white via-white/80 to-transparent" />
-                <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-white/90 via-white/20 to-transparent" />
-            </div>
+            {/* ── TIKTOK-STYLE VIGNETTE ── */}
+            <div
+                className={`absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ${isZenMode ? "opacity-0" : "opacity-100"}`}
+                style={{ background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.45) 120%)" }}
+            />
 
             {/* ── TOP BAR ── */}
             <div className={`absolute top-0 left-0 right-0 z-30 pt-safe pointer-events-auto transition-all duration-150 ${isZenMode ? "opacity-0 -translate-y-8 pointer-events-none" : "opacity-100"}`}>
@@ -511,7 +513,7 @@ export default function FeedView({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="glass-heavy p-3.5 rounded-[var(--radius-lg)]"
+                        className="bg-white/80 backdrop-blur-xl border border-white/30 p-3.5 rounded-[var(--radius-lg)] shadow-lg"
                         style={{ borderLeft: `3px solid ${currentCampaign.color}` }}
                     >
                         <div className="flex items-center gap-2 mb-1.5 w-fit">
