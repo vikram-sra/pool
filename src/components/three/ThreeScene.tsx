@@ -33,7 +33,7 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
         const aspect = size.width / size.height;
         const vFovRad = (CAMERA_FOV * Math.PI) / 180;
         const refSize = 1.3;
-        const PADDING = 1.0; // Reduced to maximize object scale
+        const PADDING = 1.5; // Increased to give more breathing room around the object
         const zForHeight = (refSize / 2 / Math.tan(vFovRad / 2)) * PADDING;
         const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
         const zForWidth = (refSize / 2 / Math.tan(hFovRad / 2)) * PADDING;
