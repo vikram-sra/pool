@@ -47,9 +47,14 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
         return () => clearTimeout(t);
     }, [isZenMode]);
 
+    const shouldRotateRef = useRef(false);
+
     // Focus target damping based on Zen mode
     useFrame((state, delta) => {
         if (!controlsRef.current) return;
+
+        // Assign rotation dynamically to ensure no negative space rotation
+        controlsRef.current.enableRotate = (currentTab === "FEED") && shouldRotateRef.current;
 
         let targetX = 0;
         let targetY = 0;
@@ -138,10 +143,19 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
                 zenYOffset={zenYOffset}
                 zenXOffset={zenXOffset}
                 onPointerDown={() => {
+                    shouldRotateRef.current = true;
                     onInteractionStart();
                 }}
                 onToggleZen={onToggleZen}
             />
+
+            {/* Negative space interceptor */}
+            <mesh onPointerDown={(e) => {
+                shouldRotateRef.current = false;
+            }}>
+                <sphereGeometry args={[20, 16, 16]} />
+                <meshBasicMaterial transparent opacity={0} side={THREE.BackSide} depthWrite={false} />
+            </mesh>
 
             <Environment preset="studio" environmentIntensity={0.8} />
 
@@ -149,7 +163,6 @@ export default function ThreeScene({ currentCampaign, currentIndex, currentTab, 
                 ref={controlsRef}
                 enablePan={false}
                 enableZoom={currentTab === "FEED"}
-                enableRotate={currentTab === "FEED"}
                 minDistance={ORBIT_MIN_DISTANCE}
                 maxDistance={ORBIT_MAX_DISTANCE}
                 enableDamping={true}

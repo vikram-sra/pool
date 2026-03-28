@@ -23,15 +23,18 @@ export default function Home() {
   const [zenXOffset, setZenXOffset] = useState(0);
   const [hasInteracted3D, setHasInteracted3D] = useState(false);
   const [pledgeStates, setPledgeStates] = useState<Record<number, PledgeState>>({});
+  const [isMounted, setIsMounted] = useState(false);
 
   const isInteractingWithObject = useRef(false);
   const dragProgressRef = useRef(0);
 
   const currentCampaign = CAMPAIGNS[currentIndex % CAMPAIGNS.length];
 
-  // Hydrate pledges
+  // Hydrate pledges and randomize first feed object on start
   useEffect(() => {
     try { setPledgeStates(JSON.parse(localStorage.getItem('dp-pledges') ?? '{}')); } catch { }
+    setCurrentIndex(Math.floor(Math.random() * CAMPAIGNS.length));
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-[100dvw] h-[100dvh] bg-[#F9FAFB] overflow-hidden">
+    <div className={`fixed inset-0 w-[100dvw] h-[100dvh] bg-[#F9FAFB] overflow-hidden transition-opacity duration-500 ${isMounted ? "opacity-100" : "opacity-0"}`}>
 
       {/* 3D CANVAS — conditionally visible based on tab */}
       <div className={`absolute inset-0 z-10 transition-opacity duration-300 ${currentTab === "FEED" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
